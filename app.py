@@ -60,6 +60,10 @@ def alzheimer():
 def pneumonia():
     return render_template('pneumonia.html')
 
+@app.route('/login.html')
+def login():
+    return render_template('login.html')
+
 ########################### Result Functions ########################################
 
 @app.route('/resultp', methods=['POST'])
