@@ -5,6 +5,9 @@ import cv2
 from tensorflow.keras.models import load_model
 import numpy as np
 
+from auth import auth_bp
+app.register_blueprint(auth_bp)
+
 # Loading Pneumonia Model
 pneumonia_model = load_model('models/pneumonia_model.h5')
 
@@ -50,15 +53,6 @@ def contact():
 def about():
     return render_template('about.html')
 
-
-@app.route('/alzheimer.html')
-def alzheimer():
-    return render_template('alzheimer.html')
-
-
-@app.route('/pneumonia.html')
-def pneumonia():
-    return render_template('pneumonia.html')
 
 @app.route('/login.html')
 def login():
