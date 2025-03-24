@@ -1,12 +1,10 @@
-from flask import Flask, flash, request, redirect, url_for, render_template
+from flask import Flask, flash, request, redirect, url_for, render_template,session
 import os
 from werkzeug.utils import secure_filename
 import cv2
 from tensorflow.keras.models import load_model
-import numpy as np
-
 from auth import auth_bp
-app.register_blueprint(auth_bp)
+import numpy as np
 
 # Loading Pneumonia Model
 pneumonia_model = load_model('models/pneumonia_model.h5')
@@ -19,6 +17,7 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = "secret key"
+app.register_blueprint(auth_bp, url_prefix='/auth')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
@@ -27,7 +26,9 @@ def allowed_file(filename):
 
 @app.route('/')
 def home():
-    return render_template('homepage.html')
+    if 'user_id' in session:
+        return render_template('homepage.html', user_id=session['user_id'])
+    return redirect(url_for('auth.login'))
 
 
 @app.route('/covid.html')
