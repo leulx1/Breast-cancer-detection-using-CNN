@@ -7,7 +7,7 @@ from database import get_db_connection
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth', __name__, static_folder=None)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
