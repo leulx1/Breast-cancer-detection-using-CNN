@@ -19,8 +19,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = "secret key"
 app.register_blueprint(auth_bp, url_prefix='/auth')
 
+# Ensure static files load correctly
+app.static_folder = 'static'
+
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+    """Check if the uploaded file is allowed."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 ########################### Routing Functions ########################################
 
