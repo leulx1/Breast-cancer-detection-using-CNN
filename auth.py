@@ -22,7 +22,7 @@ def login():
         cur = conn.cursor()
 
         try:
-            cur.execute("SELECT id, password_hash FROM users WHERE email = %s", (email,))
+            cur.execute("SELECT id, password_hash,name FROM users WHERE email = %s", (email,))
             user = cur.fetchone()
             logging.debug(f"Database query executed for email: {email}")
 
@@ -30,6 +30,7 @@ def login():
                 logging.debug(f"User found: {user[0]}")
                 if check_password_hash(user[1], password):
                     session['user_id'] = user[0]
+                    session['username'] = user[2]
                     flash('Login successful', 'success')
                     logging.info(f"User {user[0]} logged in successfully")
                     return redirect(url_for('home'))
@@ -90,11 +91,6 @@ def register():
 
 @auth_bp.route('/logout')
 def logout():
-    user_id = session.get('user_id', 'Unknown')
-    logging.debug(f"User {user_id} logging out")
-
-    session.pop('user_id', None)
+    session.clear()
     flash('Logged out successfully', 'success')
-
-    logging.info(f"User {user_id} logged out")
     return redirect(url_for('auth.login'))
