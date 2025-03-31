@@ -310,45 +310,73 @@
     box-sizing: border-box; /* Ensures padding is included in width */
 }
 
+.dashboard-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.dashboard-heading {
+  text-align: center;
+  color: #333;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.dashboard {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
 .dashboard-item {
-    text-align: center;
-    background: #262931;
-    padding: 30px 20px;
-    flex: 1; /* Allows items to grow and fill space */
-    min-width: 250px; /* Minimum width before wrapping */
-    max-width: 400px; /* Maximum width */
-    border-radius: 8px; /* Optional: adds rounded corners */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: adds subtle shadow */
-    transition: transform 0.3s ease; /* Optional: adds hover effect */
+  background: #0c0707;
+  border-radius: 10px;
+  padding: 30px 20px;
+  flex: 1;
+  min-width: 250px; /* Minimum width before wrapping */
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .dashboard-item:hover {
-    transform: translateY(-5px); /* Optional: slight lift on hover */
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
 .dashboard-item i {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-    display: block;
-    color: #fff; /* Ensures icons are visible against dark background */
+  font-size: 2.5rem;
+  color: #4a6baf;
+  margin-bottom: 15px;
 }
 
 .dashboard-item span {
-    display: block;
-    font-size: 1.2rem;
-    color: #fff;
-    font-weight: 500;
+  display: block;
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 500;
+  margin-bottom: 10px;
 }
 
-/* Responsive adjustments */
+.dashboard-count {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+}
+
 @media (max-width: 768px) {
-    .dashboard {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .dashboard-item {
-        width: 100%;
-        max-width: 100%;
-    }
+  .dashboard {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .dashboard-item {
+    width: 100%;
+    max-width: 300px;
+  }
 }
