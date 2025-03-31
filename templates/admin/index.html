@@ -3,7 +3,8 @@
 <head>
 	<title>Dashboard</title>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminstyle.css')}}">
+    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
 </head>
 <body>
 	<input type="checkbox" id="checkbox">
@@ -41,65 +42,27 @@
     </script>
     
     <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-    <script type="text/javascript">
-        $(document).ready(function(){
-    
-           $("#notificationNum").load("app/notification-count.php");
-           $("#notifications").load("app/notification.php");
-    
-       });
-    </script>
 	<div class="body">
-		<nav class="side-bar">
-            <div class="user-p">
-                <img src="{{ url_for('static', filename='img/user.png') }}" alt="User">
-                <h4>Leul</h4>
-            </div>
-            <ul id="navList">
-                <li>
-                    <a href="{{ url_for('dashboard') }}">
-                        <i class="fa fa-tachometer" aria-hidden="true"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{url_for(create_user') }}">
-                    <i class ="fa fa-user" aria-hidden="true"></i>
-                    <span>Create User</span>
-                </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('manage_users') }}">
-                        <i class="fa fa-users" aria-hidden="true"></i>
-                        <span>Manage Users</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('logout') }}">
-                        <i class="fa fa-sign-out" aria-hidden="true"></i>
-                        <span>Logout</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+        {% include 'navbar.html' %}
         
-		<section class="section-1">
+        <section class="section-1">
+            {% block content %}{% endblock %}
             <div class="dashboard-container">
-              <h2 class="dashboard-heading">Total Users</h2>
-              <div class="dashboard">
-                <div class="dashboard-item">
-                  <i class="fa fa-user-md"></i>
-                  <span>Radiologist</span>
-                  <div class="dashboard-count">0</div>
-                </div>
-                <div class="dashboard-item">
-                  <i class="fa fa-user-cog"></i>
-                  <span>Admin</span>
-                  <div class="dashboard-count">0</div>
+                <h2 class="dashboard-heading">Total Users</h2>
+                <div class="dashboard">
+                  <div class="dashboard-item">
+                    <i class="fa fa-user-md"></i>
+                    <span>Radiologist</span>
+                    <div class="dashboard-count">0</div>
+                  </div>
+                  <div class="dashboard-item">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Admin</span>
+                    <div class="dashboard-count">0</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+        </section>
 	</div>
 
 <script type="text/javascript">
