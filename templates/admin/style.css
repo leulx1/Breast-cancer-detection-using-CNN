@@ -301,26 +301,54 @@
 	margin-bottom: 10px;
 }
 .dashboard {
-	display: flex;
-	max-width: 650px;
-	width: 95%;
-	justify-content: space-between;
-	flex-wrap: wrap;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px; /* Adds consistent spacing between items */
+    padding: 20px;
+    box-sizing: border-box; /* Ensures padding is included in width */
 }
+
 .dashboard-item {
     text-align: center;
     background: #262931;
-    width: 200px;
-    padding: 30px 5px;
-    margin-bottom: 40px;
+    padding: 30px 20px;
+    flex: 1; /* Allows items to grow and fill space */
+    min-width: 250px; /* Minimum width before wrapping */
+    max-width: 400px; /* Maximum width */
+    border-radius: 8px; /* Optional: adds rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: adds subtle shadow */
+    transition: transform 0.3s ease; /* Optional: adds hover effect */
 }
-.dashboard-item i{
-	display: block;
-    color: #fff;
-    font-size: 30px;
-    margin-bottom: 5px;
+
+.dashboard-item:hover {
+    transform: translateY(-5px); /* Optional: slight lift on hover */
 }
-.dashboard-item span{
-	display: block;
+
+.dashboard-item i {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    display: block;
+    color: #fff; /* Ensures icons are visible against dark background */
+}
+
+.dashboard-item span {
+    display: block;
+    font-size: 1.2rem;
     color: #fff;
+    font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .dashboard-item {
+        width: 100%;
+        max-width: 100%;
+    }
 }
