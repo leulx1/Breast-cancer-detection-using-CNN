@@ -31,7 +31,8 @@ def allowed_file(filename):
 @app.route('/')
 def home():
     if 'user_id' in session:
-        return render_template('homepage.html', user_id=session['user_id'])
+        username=session.get('username','User')
+        return render_template('homepage.html', username=username)
     return redirect(url_for('auth.login'))
 
 
