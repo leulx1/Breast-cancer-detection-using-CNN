@@ -40,6 +40,10 @@ def home():
 def covid():
     return render_template('covid.html')
 
+@app.route('/admin/index.html')
+def admin():
+    return render_template('/admin/index.html')
+
 
 @app.route('/services.html')
 def services():
