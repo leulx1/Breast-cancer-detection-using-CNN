@@ -44,6 +44,9 @@ def covid():
 def admin():
     return render_template('/admin/index.html')
 
+@app.route('/createaccount.html')
+def createaccount():
+    return render_template('/createaccount.html')
 
 @app.route('/services.html')
 def services():
