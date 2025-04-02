@@ -50,7 +50,6 @@ def login():
 
     return render_template('login.html')
 
-@auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     logging.debug("Register route accessed")
 
@@ -58,6 +57,8 @@ def register():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
+        role = request.form['role']
+        
         logging.debug(f"Attempting registration for email: {email}")
 
         hashed_password = generate_password_hash(password)
@@ -67,10 +68,10 @@ def register():
         cur = conn.cursor()
 
         try:
-            cur.execute("INSERT INTO users (email, password_hash, name) VALUES (%s, %s, %s)", 
-                        (email, hashed_password, name))
+            cur.execute("INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s)", 
+                        (email, hashed_password, name, role))
             conn.commit()
-            flash('Account created! You can log in now.', 'success')
+            flash('Account created!', 'success')
             logging.info(f"User {email} registered successfully")
             return redirect(url_for('auth.login'))
 
@@ -80,6 +81,7 @@ def register():
             logging.warning(f"Email {email} already exists in the database")
 
         except Exception as e:
+            flash('An error occurred while creating your account.', 'danger')
             logging.error(f"Error during registration: {e}")
 
         finally:
@@ -87,7 +89,7 @@ def register():
             conn.close()
             logging.debug("Database connection closed after registration")
 
-    return render_template('register.html')
+    return render_template('createaccount.html')
 
 @auth_bp.route('/logout')
 def logout():
