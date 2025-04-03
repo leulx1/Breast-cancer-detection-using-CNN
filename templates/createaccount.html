@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminstyle.css') }}">
     <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <input type="checkbox" id="checkbox">
@@ -29,12 +30,14 @@
         <section class="section-1">
             <div class="form-container">
                 <h2>Create Account</h2>
-                <form id="createAccountForm">
+                <div id="success-message" style="display: none; color: green;">Account created successfully!</div>
+                <form id="createAccountForm" method="POST" action="{{ url_for('auth.register') }}">
                     <label for="name">Name</label>
                     <input type="text" id="name" name="name" placeholder="Enter your name" required>
                     
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    <span id="email-error" style="color: red; display: none;">Email already exists.</span>
                     
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" placeholder="Enter a strong password" required>
@@ -47,48 +50,97 @@
                     
                     <button type="submit">Create Account</button>
                 </form>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+             {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
             </div>
         </section>
     </div>
 
     <script>
-        document.getElementById("createAccountForm").addEventListener("submit", function(event) {
-            let valid = true;
+        $(document).ready(function () {
+            $("#email").on("input", function () {
+                let email = $(this).val();
+                if (email.length > 5) {
+                    $.ajax({
+                        url: "{{ url_for('auth.check_email') }}",
+                        type: "POST",
+                        data: { email: email },
+                        success: function (response) {
+                            if (response.exists) {
+                                $("#email-error").show();
+                            } else {
+                                $("#email-error").hide();
+                            }
+                        }
+                    });
+                }
+            });
 
-            let name = document.getElementById("name");
-            let nameRegex = /^[A-Za-z\s]+$/;
-            if (!nameRegex.test(name.value)) {
-                name.setCustomValidity("Name must contain only letters.");
-                name.reportValidity();
-                valid = false;
-            } else {
-                name.setCustomValidity("");
-            }
+            $("#createAccountForm").on("submit", function (event) {
+    event.preventDefault(); // Prevent default form submission
+    let valid = true;
 
-            let email = document.getElementById("email");
-            let emailRegex = /^[A-Za-z][A-Za-z0-9_.]+@[A-Za-z]+\.[A-Za-z]{2,}$/;
-            if (!emailRegex.test(email.value)) {
-                email.setCustomValidity("Enter a valid email (must start with a letter).");
-                email.reportValidity();
-                valid = false;
-            } else {
-                email.setCustomValidity("");
-            }
+    let name = $("#name").val();
+    let nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(name)) {
+        alert("Name must contain only letters.");
+        valid = false;
+    }
 
-            let password = document.getElementById("password");
-            let passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-            if (!passwordRegex.test(password.value)) {
-                password.setCustomValidity("Password must be at least 8 characters, include 1 uppercase, 1 number, and 1 special character.");
-                password.reportValidity();
-                valid = false;
-            } else {
-                password.setCustomValidity("");
-            }
+    let email = $("#email").val().toLowerCase();
+    let emailRegex = /^[a-z][a-z0-9_.]+@[a-z]+\.[a-z]{2,}$/;
+    if (!emailRegex.test(email)) {
+        alert("Enter a valid email (must start with a letter).");
+        valid = false;
+    }
 
-            if (!valid) {
-                event.preventDefault();
+    let password = $("#password").val();
+    let passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+        alert("Password must be at least 8 characters, include 1 uppercase, 1 number, and 1 special character.");
+        valid = false;
+    }
+
+    if ($("#email-error").is(":visible")) {
+        alert("Email is already registered.");
+        valid = false;
+    }
+
+    if (valid) {
+        $.ajax({
+            url: "{{ url_for('auth.register') }}",
+            type: "POST",
+            data: $("#createAccountForm").serialize(),
+            dataType: "json",
+            success: function (response) {
+                if (response.success) {
+                    $("#success-message").text(response.message).show();
+                    $("#createAccountForm")[0].reset();
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function (xhr) {
+                let errorMsg = "An error occurred. Please try again.";
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                alert(errorMsg);
             }
+        });
+    }
+});
+
         });
     </script>
 </body>
 </html>
+
+
