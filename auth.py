@@ -1,5 +1,5 @@
 import logging
-from flask import Blueprint, request, render_template, redirect, url_for, session, flash
+from flask import Blueprint, request, render_template, redirect, url_for, session, flash, jsonify
 import psycopg2
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import get_db_connection
@@ -22,7 +22,7 @@ def login():
         cur = conn.cursor()
 
         try:
-            cur.execute("SELECT id, password_hash,name FROM users WHERE email = %s", (email,))
+            cur.execute("SELECT id, password_hash, name FROM users WHERE email = %s", (email,))
             user = cur.fetchone()
             logging.debug(f"Database query executed for email: {email}")
 
@@ -43,6 +43,7 @@ def login():
 
         except Exception as e:
             logging.error(f"Error during login: {e}")
+            flash('An error occurred during login', 'danger')
         finally:
             cur.close()
             conn.close()
@@ -50,6 +51,25 @@ def login():
 
     return render_template('login.html')
 
+@auth_bp.route('/check_email', methods=['POST'])
+def check_email():
+    """AJAX route to check if email exists in the database."""
+    email = request.form['email']
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT COUNT(*) FROM users WHERE email = %s", (email,))
+        exists = cur.fetchone()[0] > 0
+        return jsonify({'exists': exists})
+    except Exception as e:
+        logging.error(f"Error checking email: {e}")
+        return jsonify({'error': 'Database error'}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     logging.debug("Register route accessed")
 
@@ -68,21 +88,28 @@ def register():
         cur = conn.cursor()
 
         try:
-            cur.execute("INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s)", 
-                        (email, hashed_password, name, role))
+            # Check if email already exists before inserting
+            cur.execute("SELECT COUNT(*) FROM users WHERE email = %s", (email,))
+            if cur.fetchone()[0] > 0:
+                return jsonify({'success': False, 'message': 'Email already registered!'}), 400
+
+            cur.execute(
+                "INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s)", 
+                (email, hashed_password, name, role)
+            )
             conn.commit()
-            flash('Account created!', 'success')
             logging.info(f"User {email} registered successfully")
-            return redirect(url_for('auth.login'))
+
+            return jsonify({'success': True, 'message': 'Account created successfully!'})
 
         except psycopg2.IntegrityError:
-            flash('Email already registered!', 'danger')
             conn.rollback()
             logging.warning(f"Email {email} already exists in the database")
+            return jsonify({'success': False, 'message': 'Email already registered!'}), 400
 
         except Exception as e:
-            flash('An error occurred while creating your account.', 'danger')
             logging.error(f"Error during registration: {e}")
+            return jsonify({'success': False, 'message': 'An error occurred while creating your account.'}), 500
 
         finally:
             cur.close()
