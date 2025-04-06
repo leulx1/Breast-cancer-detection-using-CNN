@@ -1,0 +1,60 @@
+<!-- manage_accounts.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Accounts</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminstyle.css') }}">
+</head>
+<body>
+    <input type="checkbox" id="checkbox">
+    <header class="header">
+        <h2 class="u-name">Admin<b> Panel</b>
+            <label for="checkbox">
+                <i id="navbtn" class="fa fa-bars" aria-hidden="true"></i>
+            </label>
+        </h2>
+        <span class="notification" id="notificationBtn">
+            <i class="fa fa-bell" aria-hidden="true"></i>
+            <span id="notificationNum"></span>
+        </span>
+    </header>
+    <div class="notification-bar" id="notificationBar">
+        <ul id="notifications"></ul>
+    </div>
+
+    <div class="body">
+        {% include 'navbar.html' %}
+        <section class="section-1">
+            <div class="dashboard-container">
+                <h2 class="dashboard-heading">Manage User Accounts</h2>
+                <p>Users loaded: {{ users | length }}</p>
+
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.role }}</td>
+                            <td>
+                                <a href="{{ url_for('auth.update_user', user_id=user.id) }}" class="btn-update">Update</a>
+                                <a href="{{ url_for('auth.delete_user', user_id=user.id) }}" class="btn-delete" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
