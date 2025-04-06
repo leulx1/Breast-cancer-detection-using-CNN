@@ -47,6 +47,10 @@ def admin():
 @app.route('/createaccount.html')
 def createaccount():
     return render_template('/createaccount.html')
+    
+@app.route('/manage_accounts.html')
+def manage_accounts():
+    return render_template('/manage_accounts.html')
 
 @app.route('/services.html')
 def services():
