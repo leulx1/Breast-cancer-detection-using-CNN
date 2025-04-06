@@ -425,16 +425,89 @@ button:hover {
     padding: 10px 15px;
     margin: 10px 0;
     border-radius: 4px;
-  }
+}
   
-  .alert-success {
+.alert-success {
     background-color: #d4edda;
     color: #155724;
     border: 1px solid #c3e6cb;
-  }
+}
   
-  .alert-danger {
+.alert-danger {
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
-  }
+}
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+.user-table th, .user-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+.user-table th {
+    background-color: #f2f2f2;
+}
+.btn-update, .btn-delete {
+    padding: 6px 12px;
+    margin: 2px;
+    border: none;
+    text-decoration: none;
+    color: white;
+    border-radius: 4px;
+}
+.btn-update {
+    background-color: #4CAF50;
+}
+.btn-delete {
+    background-color: #f44336;
+}
+/* manage account pagination and table css */
+.pagination {
+	display: flex;
+	justify-content: center;
+	margin-top: 20px;
+	list-style: none;
+	padding: 0;
+}
+
+.pagination li {
+	margin: 0 5px;
+}
+
+.pagination a {
+	display: inline-block;
+	padding: 5px 10px;
+	border: 1px solid #ddd;
+	text-decoration: none;
+	color: #333;
+	border-radius: 3px;
+	cursor: pointer;
+}
+
+.pagination a.active {
+	background-color: #4CAF50;
+	color: white;
+	border: 1px solid #4CAF50;
+}
+
+.pagination a:hover:not(.active) {
+	background-color: #ddd;
+}
+
+.pagination a.disabled {
+	color: #aaa;
+	pointer-events: none;
+	cursor: default;
+}
+
+.user-row {
+	display: none;
+}
+
+.user-row.show {
+	display: table-row;
+}
