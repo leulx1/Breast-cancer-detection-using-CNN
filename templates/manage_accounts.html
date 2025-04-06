@@ -28,7 +28,6 @@
         <section class="section-1">
             <div class="dashboard-container">
                 <h2 class="dashboard-heading">Manage User Accounts</h2>
-                <p>Users loaded: {{ users | length }}</p>
 
                 <table class="user-table">
                     <thead>
@@ -39,9 +38,9 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="user-table-body">
                         {% for user in users %}
-                        <tr>
+                        <tr class="user-row" data-index="{{ loop.index0 }}">
                             <td>{{ user.email }}</td>
                             <td>{{ user.name }}</td>
                             <td>{{ user.role }}</td>
@@ -53,8 +52,110 @@
                         {% endfor %}
                     </tbody>
                 </table>
+
+                <div class="pagination-container">
+                    <ul class="pagination" id="pagination-controls">
+                        <li><a id="prev-page" class="disabled">&laquo; Previous</a></li>
+                        <!-- Page numbers will be inserted here by JavaScript -->
+                        <li><a id="next-page">Next &raquo;</a></li>
+                    </ul>
+                </div>
             </div>
         </section>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const usersPerPage = 10;
+            const userRows = document.querySelectorAll('.user-row');
+            const totalUsers = userRows.length;
+            const totalPages = Math.ceil(totalUsers / usersPerPage);
+            let currentPage = 1;
+            
+            // Initialize pagination
+            initPagination();
+            showPage(1);
+            
+            // Previous page button
+            document.getElementById('prev-page').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    showPage(currentPage - 1);
+                }
+            });
+            
+            // Next page button
+            document.getElementById('next-page').addEventListener('click', function() {
+                if (currentPage < totalPages) {
+                    showPage(currentPage + 1);
+                }
+            });
+            
+            function showPage(page) {
+                currentPage = page;
+                
+                // Hide all rows
+                userRows.forEach(row => {
+                    row.classList.remove('show');
+                });
+                
+                // Calculate range to show
+                const startIndex = (page - 1) * usersPerPage;
+                const endIndex = Math.min(startIndex + usersPerPage, totalUsers);
+                
+                // Show rows for current page
+                for (let i = startIndex; i < endIndex; i++) {
+                    userRows[i].classList.add('show');
+                }
+                
+                // Update page info
+                document.getElementById('page-info').textContent = 
+                    `Showing users ${startIndex + 1} to ${endIndex} of ${totalUsers}`;
+                
+                // Update pagination controls
+                updatePaginationControls();
+            }
+            
+            function initPagination() {
+                const paginationControls = document.getElementById('pagination-controls');
+                const prevPageItem = paginationControls.firstElementChild;
+                const nextPageItem = paginationControls.lastElementChild;
+                
+                // Clear any existing page numbers (except prev/next)
+                while (paginationControls.children.length > 2) {
+                    paginationControls.removeChild(paginationControls.children[1]);
+                }
+                
+                // Add page numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.textContent = i;
+                    a.href = '#';
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        showPage(i);
+                    });
+                    li.appendChild(a);
+                    paginationControls.insertBefore(li, nextPageItem);
+                }
+            }
+            
+            function updatePaginationControls() {
+                const pageLinks = document.querySelectorAll('#pagination-controls li a:not(#prev-page):not(#next-page)');
+                
+                // Update active state for page numbers
+                pageLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (parseInt(link.textContent) === currentPage) {
+                        link.classList.add('active');
+                    }
+                });
+                
+                // Update prev/next buttons
+                document.getElementById('prev-page').classList.toggle('disabled', currentPage === 1);
+                document.getElementById('next-page').classList.toggle('disabled', currentPage === totalPages);
+            }
+        });
+    </script>
 </body>
 </html>
