@@ -118,6 +118,50 @@ def register():
 
     return render_template('createaccount.html')
 
+@auth_bp.route('/manage_accounts')
+def manage_accounts():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT id, email, name, role FROM users")
+        rows = cur.fetchall()
+        users = [{'id': r[0], 'email': r[1], 'name': r[2], 'role': r[3]} for r in rows]
+    except Exception as e:
+        logging.error(f"Error fetching users: {e}")
+        flash("Failed to load user list.", "danger")
+        users = []
+    finally:
+        cur.close()
+        conn.close()
+
+    return render_template('manage_accounts.html', users=users)
+
+
+@auth_bp.route('/update_user/<int:user_id>', methods=['GET', 'POST'])
+def update_user(user_id):
+    # You can implement update logic here
+    flash("Update functionality not implemented yet.", "info")
+    return redirect(url_for('auth.manage_accounts'))
+
+@auth_bp.route('/delete_user/<int:user_id>', methods=['GET'])
+def delete_user(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        conn.commit()
+        flash("User deleted successfully.", "success")
+    except Exception as e:
+        logging.error(f"Error deleting user: {e}")
+        flash("Failed to delete user.", "danger")
+    finally:
+        cur.close()
+        conn.close()
+
+    return redirect(url_for('auth.manage_accounts'))
+
+
 @auth_bp.route('/logout')
 def logout():
     session.clear()
