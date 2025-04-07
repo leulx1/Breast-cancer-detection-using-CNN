@@ -5,6 +5,9 @@ import cv2
 from tensorflow.keras.models import load_model
 from auth import auth_bp
 import numpy as np
+from admin import admin_bp
+
+
 
 # Loading Pneumonia Model
 pneumonia_model = load_model('models/pneumonia_model.h5')
@@ -18,6 +21,9 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = "secret key"
 app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(admin_bp, url_prefix='/admin')
+
+
 
 # Ensure static files load correctly
 app.static_folder = 'static'
@@ -31,8 +37,14 @@ def allowed_file(filename):
 @app.route('/')
 def home():
     if 'user_id' in session:
-        username=session.get('username','User')
-        return render_template('homepage.html', username=username)
+        username = session.get('username', 'User')
+        role = session.get('role', 'radiologist')  # Default to radiologist if role not set
+        
+        # Check role and render appropriate template
+        if role == 'admin':
+            return render_template('admin/index.html', username=username)
+        else:
+            return render_template('homepage.html', username=username)
     return redirect(url_for('auth.login'))
 
 
