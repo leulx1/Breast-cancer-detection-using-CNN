@@ -28,30 +28,40 @@
         <section class="section-1">
             <div class="dashboard-container">
                 <h2 class="dashboard-heading">Manage User Accounts</h2>
+                
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                    <div class="search-container">
+                        <input type="text" id="userSearch" placeholder="Search by email..." style="padding: 8px; width: 250px;">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
 
-                <table class="user-table">
-                    <thead>
-                        <tr>
-                            <th>Email</th>
-                            <th>Name</th>
-                            <th>Role</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-table-body">
-                        {% for user in users %}
-                        <tr class="user-row" data-index="{{ loop.index0 }}">
-                            <td>{{ user.email }}</td>
-                            <td>{{ user.name }}</td>
-                            <td>{{ user.role }}</td>
-                            <td>
-                                <a href="{{ url_for('auth.update_user', user_id=user.id) }}" class="btn-update">Update</a>
-                                <a href="{{ url_for('auth.delete_user', user_id=user.id) }}" class="btn-delete" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<table class="user-table">
+    <thead>
+        <tr>
+            <th>No.</th> 
+            <th>Email</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="user-table-body">
+        {% for user in users %}
+        <tr class="user-row" data-index="{{ loop.index0 }}">
+            <td class="user-number">{{ loop.index }}</td>
+            <td class="user-email">{{ user.email }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+                <a href="{{ url_for('auth.update_user', user_id=user.id) }}" class="btn-update">Update</a>
+                <a href="{{ url_for('auth.delete_user', user_id=user.id) }}" class="btn-delete" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
 
                 <div class="pagination-container">
                     <ul class="pagination" id="pagination-controls">
@@ -156,6 +166,26 @@
                 document.getElementById('next-page').classList.toggle('disabled', currentPage === totalPages);
             }
         });
+    // Filter table by email
+document.getElementById("userSearch").addEventListener("input", function () {
+    const searchValue = this.value.toLowerCase();
+    const rows = document.querySelectorAll(".user-row");
+
+    let visibleIndex = 1;
+    rows.forEach((row) => {
+        const email = row.querySelector(".user-email").textContent.toLowerCase();
+        if (email.includes(searchValue)) {
+            row.style.display = "";
+            row.querySelector(".user-number").textContent = visibleIndex++; // update numbering
+        } else {
+            row.style.display = "none";
+        }
+    });
+
+    // Optional: reset pagination to show all filtered results
+    document.querySelectorAll(".pagination li").forEach(li => li.style.display = "none");
+});
+
     </script>
 </body>
 </html>
