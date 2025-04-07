@@ -14,7 +14,7 @@ def login():
     logging.debug("Login route accessed")
 
     if request.method == 'POST':
-        email = request.form['email']
+        email = request.form['email'].lower()
         password = request.form['password']
         logging.debug(f"Attempting login for email: {email}")
 
@@ -53,21 +53,25 @@ def login():
 
 @auth_bp.route('/check_email', methods=['POST'])
 def check_email():
-    """AJAX route to check if email exists in the database."""
-    email = request.form['email']
+    email = request.form.get('email').lower()
+    user_id = request.form.get('user_id')  # this can be None if not sent
+
     conn = get_db_connection()
     cur = conn.cursor()
 
     try:
-        cur.execute("SELECT COUNT(*) FROM users WHERE email = %s", (email,))
-        exists = cur.fetchone()[0] > 0
-        return jsonify({'exists': exists})
-    except Exception as e:
-        logging.error(f"Error checking email: {e}")
-        return jsonify({'error': 'Database error'}), 500
+        if user_id:
+            cur.execute("SELECT id FROM users WHERE email = %s AND id != %s", (email, user_id))
+        else:
+            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+        
+        existing_user = cur.fetchone()
+        return jsonify({'exists': bool(existing_user)})
+    
     finally:
         cur.close()
         conn.close()
+
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -75,7 +79,7 @@ def register():
 
     if request.method == 'POST':
         name = request.form['name']
-        email = request.form['email']
+        email = request.form['email'].lower()
         password = request.form['password']
         role = request.form['role']
         
@@ -123,9 +127,9 @@ def manage_accounts():
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        cur.execute("SELECT id, email, name, role FROM users")
+        cur.execute("SELECT id, email, name, password_hash, role FROM users")
         rows = cur.fetchall()
-        users = [{'id': r[0], 'email': r[1], 'name': r[2], 'role': r[3]} for r in rows]
+        users = [{'id': r[0], 'email': r[1], 'name': r[2], 'role': r[4]} for r in rows]
     except Exception as e:
         logging.error(f"Error fetching users: {e}")
         flash("Failed to load user list.", "danger")
@@ -137,11 +141,60 @@ def manage_accounts():
     return render_template('manage_accounts.html', users=users)
 
 
+
+
 @auth_bp.route('/update_user/<int:user_id>', methods=['GET', 'POST'])
 def update_user(user_id):
-    # You can implement update logic here
-    flash("Update functionality not implemented yet.", "info")
-    return redirect(url_for('auth.manage_accounts'))
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email'].lower()
+        role = request.form['role']
+        password = request.form.get('password')
+
+        try:
+            if password:
+                hashed_password = generate_password_hash(password)
+                cur.execute(
+                    "UPDATE users SET name=%s, email=%s, password_hash=%s, role=%s, updated_at=NOW() WHERE id=%s",
+                    (name, email, hashed_password, role, user_id)
+                )
+            else:
+                cur.execute(
+                    "UPDATE users SET name=%s, email=%s, role=%s, updated_at=NOW() WHERE id=%s",
+                    (name, email, role, user_id)
+                )
+
+            conn.commit()
+            flash("User updated successfully.", "success")
+            return redirect(url_for('auth.manage_accounts'))
+
+        except Exception as e:
+            logging.error(f"Error updating user: {e}")
+            flash("Failed to update user.", "danger")
+
+        finally:
+            cur.close()
+            conn.close()
+
+    else:
+        cur.execute("SELECT id, name, email, role FROM users WHERE id = %s", (user_id,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if user is None:
+            flash("User not found.", "warning")
+            return redirect(url_for('auth.manage_accounts'))
+
+        return render_template('update_user.html', user={
+            'id': user[0], 'name': user[1], 'email': user[2], 'role': user[3]
+        })
+
+
+
 
 @auth_bp.route('/delete_user/<int:user_id>', methods=['GET'])
 def delete_user(user_id):
