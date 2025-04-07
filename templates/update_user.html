@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update User</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminstyle.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <input type="checkbox" id="checkbox">
+    <header class="header">
+        <h2 class="u-name">Admin<b> Panel</b>
+            <label for="checkbox">
+                <i id="navbtn" class="fa fa-bars" aria-hidden="true"></i>
+            </label>
+        </h2>
+        <span class="notification" id="notificationBtn">
+            <i class="fa fa-bell" aria-hidden="true"></i>
+            <span id="notificationNum"></span>
+        </span>
+    </header>
+    <div class="notification-bar" id="notificationBar">
+        <ul id="notifications"></ul>
+    </div>
+
+    <div class="body">
+        {% include 'navbar.html' %}
+
+        <section class="section-1">
+            <div class="form-container">
+                <h2>Update User</h2>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <input type="hidden" id="user_id" value="{{ user.id }}">
+                    <label>Name:</label>
+                    <input type="text" name="name" value="{{ user.name }}" required>
+                    <span id="name-error" style="color: red; display: none;"></span>
+                
+                    <label>Email:</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" required>
+                    <span id="email-error" style="color: red; display: none;"></span>
+
+                
+                    <label>Password:</label>
+                    <input type="password" id="password" name="password">
+                    <span id="password-error" style="color: red; display: none;"></span>
+                
+                    <label>Role:</label>
+                    <select name="role">
+                        <option value="radiologist" {% if user.role == 'radiologist' %}selected{% endif %}>Radiologist</option>
+                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                
+                    <button type="submit">Update</button>
+                </form>
+                
+
+                <br>
+                <a href="{{ url_for('auth.manage_accounts') }}">Back to User List</a>
+            </div>
+        </section>
+    </div>
+</body>
+<script>
+    $(document).ready(function () {
+        $("#email").on("input", function () {
+            let email = $(this).val();
+            let userId = $("#user_id").val();
+            if (email.length > 5) {
+                $.ajax({
+                    url: "{{ url_for('auth.check_email') }}",
+                    type: "POST",
+                    data: { email: email, user_id: userId },
+                    success: function (response) {
+                        if (response.exists) {
+                            $("#email-error").text("Email already exists!").show();
+                        } else {
+                            $("#email-error").hide();
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script> 
+<script>
+    document.querySelector("form").addEventListener("submit", function (event) {
+        const name = document.querySelector("input[name='name']").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        
+        const nameRegex = /^[A-Za-z\s]+$/;
+        const emailRegex = /^[^\d][\w.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+        const passwordError = document.getElementById("password-error");
+        const emailError = document.getElementById("email-error");
+        const nameError=document.getElementById("name-error");
+
+        let hasError = false;
+
+       
+        if (!nameRegex.test(name)) {
+            nameError.textContent= "Name must not contain number or special character.";
+            nameError.style.display= "block";
+            event.preventDefault();
+            hasError = true;
+        } else {
+            nameError.style.display = "none";
+        }
+        
+
+        // Email validation
+        if (!emailRegex.test(email)) {
+            emailError.textContent = "Email should not start with a number.";
+            emailError.style.display = "block";
+            event.preventDefault();
+            hasError = true;
+        } else {
+            emailError.style.display = "none";
+        }
+
+        // Password validation
+        if (password) {
+            if (!passwordRegex.test(password)) {
+                passwordError.textContent = "Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character.";
+                passwordError.style.display = "block";
+                event.preventDefault();
+                hasError = true;
+            } else {
+                passwordError.style.display = "none";
+            }
+        }
+
+        if (hasError) return;
+    });
+</script>
+
+
+</html>
+
+
+
+
+
+
+
