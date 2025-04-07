@@ -9,6 +9,15 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %
 
 auth_bp = Blueprint('auth', __name__, static_folder=None)
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'role' not in session or session['role'] != 'admin':
+            flash('You do not have permission to access this page.', 'danger')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     logging.debug("Login route accessed")
@@ -22,7 +31,8 @@ def login():
         cur = conn.cursor()
 
         try:
-            cur.execute("SELECT id, password_hash, name FROM users WHERE email = %s", (email,))
+            # Include role in the SELECT query
+            cur.execute("SELECT id, password_hash, name, role FROM users WHERE email = %s", (email,))
             user = cur.fetchone()
             logging.debug(f"Database query executed for email: {email}")
 
@@ -31,9 +41,17 @@ def login():
                 if check_password_hash(user[1], password):
                     session['user_id'] = user[0]
                     session['username'] = user[2]
+                    session['role'] = user[3]  # Store role in session
                     flash('Login successful', 'success')
                     logging.info(f"User {user[0]} logged in successfully")
-                    return redirect(url_for('home'))
+                    
+                    
+                    if user[3] == 'radiologist':
+                        return redirect(url_for('home'))
+                    elif user[3] == 'admin':
+                        return redirect(url_for('admin.index'))
+                    else:
+                        return redirect(url_for('home'))
                 else:
                     logging.warning(f"Incorrect password for user ID {user[0]}")
                     flash('Invalid credentials', 'danger')
