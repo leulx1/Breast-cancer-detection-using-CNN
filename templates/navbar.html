@@ -1,11 +1,11 @@
 <nav class="side-bar">
     <div class="user-p">
         <img src="{{ url_for('static', filename='/assets/img/icons/user.png') }}" alt="User">
-        <h4>leul</h4>
+        <h4>{% if username %}{{ username }}{% endif %}</h4>
     </div>
     <ul id="navList">
         <li>
-            <a href="/admin/index.html">
+            <a href=href="{{ url_for('admin.index') }}">
                 <i class="fa fa-tachometer" aria-hidden="true"></i>
                 <span>Dashboard</span>
             </a>
@@ -23,7 +23,7 @@
             </a>
         </li>
         <li>
-            <a href="{{ url_for('auth.login') }}">
+            <a href="{{ url_for('auth.logout') }}">
                 <i class="fa fa-sign-out" aria-hidden="true"></i>
                 <span>Logout</span>
             </a>
