@@ -41,7 +41,8 @@ def login():
                 if check_password_hash(user[1], password):
                     session['user_id'] = user[0]
                     session['username'] = user[2]
-                    session['role'] = user[3]  # Store role in session
+                    session['role'] = user[3]
+                    print("Session username:", session.get('username'))  
                     flash('Login successful', 'success')
                     logging.info(f"User {user[0]} logged in successfully")
                     
