@@ -67,15 +67,29 @@
             color: #333;
         }
         .btn-analyze {
-            margin-top: 20px;
+            margin: 10px;
             padding: 10px 30px;
             font-size: 1.1rem;
-            background-color: #0062cc;
-            border: none;
+            min-width: 200px;
         }
-        .btn-analyze:hover {
-            background-color: #004ba0;
-        }
+
+.btn-primary {
+    background-color: #0062cc;
+    border: none;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #004ba0;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
         /* Modal styles for full-size image */
         .image-modal .modal-dialog {
             max-width: 90%;
@@ -161,6 +175,24 @@
                 <i class="fa fa-arrow-left"></i> Analyze Another Image
             </a>
         </div>
+        <!-- Add this near the Analyze Another Image button -->
+<div class="text-center mt-4">
+    <form action="/generate_report" method="POST" style="display: inline-block;">
+        <input type="hidden" name="firstname" value="{{fn}}">
+        <input type="hidden" name="lastname" value="{{ln}}">
+        <input type="hidden" name="patient_id" value="{{pid}}">
+        <input type="hidden" name="original_img" value="{{original_img}}">
+        <input type="hidden" name="enhanced_img" value="{{enhanced_img}}">
+        <input type="hidden" name="segmented_img" value="{{segmented_img}}">
+        <input type="hidden" name="overlay_img" value="{{overlay_img}}">
+        <button type="submit" class="btn btn-success btn-analyze">
+            <i class="fa fa-file-pdf-o"></i> Generate Report
+        </button>
+    </form>
+    <a href="/breastcancer.html" class="btn btn-primary btn-analyze">
+        <i class="fa fa-arrow-left"></i> Analyze Another Image
+    </a>
+</div>
     </div>
 
     <!-- Image Modal -->
