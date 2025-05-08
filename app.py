@@ -1,4 +1,4 @@
-from flask import Flask, flash, request, redirect, url_for, render_template,session
+from flask import Flask, flash, request, redirect, url_for, render_template,session,send_file
 import os
 from werkzeug.utils import secure_filename
 import cv2
@@ -8,6 +8,14 @@ import numpy as np
 from admin import admin_bp
 from tensorflow.keras import backend as K
 import tensorflow as tf
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from PyPDF2 import PdfMerger
+import tempfile
 
 # Define the Dice loss function (needed to load the model)
 def dice_loss(y_true, y_pred, smooth=1e-6):
@@ -110,6 +118,62 @@ def process_breast_cancer_image(image_path):
     except Exception as e:
         print(f"Error processing image: {e}")
         return None, None, None, None
+
+def generate_pdf_report(patient_data, image_paths, output_path):
+    """Generate a PDF report with patient data and images"""
+    doc = SimpleDocTemplate(output_path, pagesize=letter)
+    styles = getSampleStyleSheet()
+    
+    # Custom style for headings
+    heading_style = ParagraphStyle(
+        'Heading1',
+        parent=styles['Heading1'],
+        alignment=TA_CENTER,
+        spaceAfter=12
+    )
+    
+    # Create story (content) for PDF
+    story = []
+    
+    # Add title
+    story.append(Paragraph("Breast Cancer Analysis Report", heading_style))
+    story.append(Spacer(1, 12))
+    
+    # Add patient information
+    story.append(Paragraph("Patient Information", styles['Heading2']))
+    patient_info = [
+        ["First Name:", patient_data['firstname']],
+        ["Last Name:", patient_data['lastname']],
+        ["Patient ID:", patient_data['patient_id']]
+    ]
+    patient_table = Table(patient_info, colWidths=[1.5*inch, 3*inch])
+    patient_table.setStyle(TableStyle([
+        ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,0), (-1,-1), 12),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    story.append(patient_table)
+    story.append(Spacer(1, 24))
+    
+    # Add images section
+    story.append(Paragraph("Image Analysis Results", styles['Heading2']))
+    
+    # Add each image with caption
+    image_captions = [
+        ("Original Mammogram", image_paths['original']),
+        ("Enhanced Image (CLAHE)", image_paths['enhanced']),
+        ("Segmentation Mask", image_paths['segmented']),
+        ("Overlay Visualization", image_paths['overlay'])
+    ]
+    
+    for caption, img_path in image_captions:
+        story.append(Spacer(1, 12))
+        story.append(Paragraph(caption, styles['Heading2']))
+        img = Image(img_path, width=5*inch, height=4*inch)
+        story.append(img)
+    
+    # Build the PDF
+    doc.build(story)
 ########################### Routing Functions ########################################
 
 @app.route('/')
@@ -198,6 +262,43 @@ def resultbc():
         else:
             flash('Allowed image types are - png, jpg, jpeg')
             return redirect(url_for('brain_tumor'))
+
+@app.route('/generate_report', methods=['POST'])
+def generate_report():
+    if request.method == 'POST':
+        # Get patient data from form
+        patient_data = {
+            'firstname': request.form['firstname'],
+            'lastname': request.form['lastname'],
+            'patient_id': request.form['patient_id']
+        }
+        
+        # Get image filenames from form
+        image_filenames = {
+            'original': request.form['original_img'],
+            'enhanced': request.form['enhanced_img'],
+            'segmented': request.form['segmented_img'],
+            'overlay': request.form['overlay_img']
+        }
+        
+        # Create full paths to images
+        image_paths = {k: os.path.join(app.config['RESULTS_FOLDER'], v) for k, v in image_filenames.items()}
+        
+        # Create a temporary PDF file
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            pdf_path = tmp.name
+        
+        # Generate the PDF
+        generate_pdf_report(patient_data, image_paths, pdf_path)
+        
+        # Send the PDF to the client
+        return send_file(
+            pdf_path,
+            as_attachment=True,
+            download_name=f"BreastCancerReport_{patient_data['lastname']}_{patient_data['patient_id']}.pdf",
+            mimetype='application/pdf'
+        )
+
 # No caching at all for API endpoints.
 @app.after_request
 def add_header(response):
