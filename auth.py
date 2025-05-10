@@ -4,6 +4,9 @@ import psycopg2
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import get_db_connection
 from functools import wraps
+from flask_mail import Message
+import smtplib
+from extension import mail
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -109,7 +112,6 @@ def register():
         role = request.form['role']
         
         logging.debug(f"Attempting registration for email: {email}")
-
         hashed_password = generate_password_hash(password)
         logging.debug(f"Password hashed for email: {email}")
 
@@ -117,26 +119,44 @@ def register():
         cur = conn.cursor()
 
         try:
-            # Check if email already exists before inserting
+            # 1. Check if email already exists
             cur.execute("SELECT COUNT(*) FROM users WHERE email = %s", (email,))
             if cur.fetchone()[0] > 0:
                 return jsonify({'success': False, 'message': 'Email already registered!'}), 400
 
+            # 2. Send email with original password
+            msg = Message('Your Account Details', recipients=[email])
+            msg.body = f"""
+            Hello {name},
+
+            Your account has been created successfully!
+            Here are your login credentials:
+
+            Email: {email}
+            Password: {password}
+            """
+            try:
+                mail.send(msg)
+                logging.info(f"Email successfully sent to {email}")
+            except smtplib.SMTPRecipientsRefused:
+                logging.error(f"Email sending failed: recipient {email} not found.")
+                return jsonify({'success': False, 'message': 'Email not found. Please check the email address.'}), 400
+            except Exception as e:
+                logging.error(f"Email sending failed for {email}: {e}")
+                return jsonify({'success': False, 'message': 'Email could not be sent.'}), 500
+
+            # 3. Insert new user after email is sent
             cur.execute(
-                "INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s)", 
+                "INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s)",
                 (email, hashed_password, name, role)
             )
             conn.commit()
             logging.info(f"User {email} registered successfully")
 
-            return jsonify({'success': True, 'message': 'Account created successfully!'})
-
-        except psycopg2.IntegrityError:
-            conn.rollback()
-            logging.warning(f"Email {email} already exists in the database")
-            return jsonify({'success': False, 'message': 'Email already registered!'}), 400
+            return jsonify({'success': True, 'message': 'Email sent and account created successfully!'})
 
         except Exception as e:
+            conn.rollback()
             logging.error(f"Error during registration: {e}")
             return jsonify({'success': False, 'message': 'An error occurred while creating your account.'}), 500
 
