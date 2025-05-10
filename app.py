@@ -30,7 +30,7 @@ custom_objects = {'dice_loss': dice_loss}
 tf.keras.utils.get_custom_objects().update(custom_objects)
 
 # Loading Models
-breast_cancer_model = load_model('unet_mammo.keras', custom_objects=custom_objects)  # Load breast cancer model
+breast_cancer_model=load_model('unet_mammo.keras', custom_objects=custom_objects)  # Load breast cancer model
 
 # Configuring Flask
 UPLOAD_FOLDER = 'static/uploads'
@@ -60,8 +60,9 @@ def process_breast_cancer_image(image_path):
     """Process the uploaded image and return four versions:
     1. Original
     2. Enhanced (CLAHE)
-    3. Segmented mask
-    4. Overlay (original + mask)
+    3. Segmented mask (blank if no tumor found)
+    4. Overlay (original + mask, no overlay if no tumor found)
+    Also returns whether tumor found based on 5% threshold.
     """
     try:
         # Read original image
@@ -83,10 +84,23 @@ def process_breast_cancer_image(image_path):
         
         # Get segmentation mask
         mask = breast_cancer_model.predict(model_input)
-        binary_mask = (mask > 0.7).astype(np.uint8)[0,...,0]
+        binary_mask = (mask > 0.9).astype(np.uint8)[0,...,0]
         
         # Resize mask to original dimensions
         binary_mask = cv2.resize(binary_mask, (original_width, original_height))
+        
+        # Calculate tumor percentage
+        total_pixels = original_img.size
+        tumor_pixels = np.count_nonzero(binary_mask)
+        tumor_percentage = (tumor_pixels / total_pixels) * 100
+        print(f"Tumor percentage: {tumor_percentage:.2f}%")
+        
+        # Determine tumor status
+        tumor_found = tumor_percentage > 5  # Boolean for easier logic
+        
+        # Create blank mask if no tumor found
+        if not tumor_found:
+            binary_mask = np.zeros_like(binary_mask)
         
         # Create segmented version (just the mask)
         segmented_img = binary_mask * 255  # Convert to 0-255 scale
@@ -96,13 +110,14 @@ def process_breast_cancer_image(image_path):
             original_rgb = cv2.cvtColor(original_img, cv2.COLOR_GRAY2RGB)
         else:
             original_rgb = original_img.copy()
-            
         overlay = original_rgb.copy()
-        overlay[binary_mask == 1] = [255, 0, 0]  # Highlight mask in red
+        
+        # Only apply overlay if tumor was found
+        if tumor_found:
+            overlay[binary_mask == 1] = [255, 0, 0]  # Highlight mask in red
         
         # Save all versions
         result_filename = os.path.basename(image_path)
-        
         original_path = os.path.join(app.config['RESULTS_FOLDER'], f"original_{result_filename}")
         enhanced_path = os.path.join(app.config['RESULTS_FOLDER'], f"enhanced_{result_filename}")
         segmented_path = os.path.join(app.config['RESULTS_FOLDER'], f"segmented_{result_filename}")
@@ -113,11 +128,13 @@ def process_breast_cancer_image(image_path):
         cv2.imwrite(segmented_path, segmented_img)
         cv2.imwrite(overlay_path, overlay)
         
-        return original_path, enhanced_path, segmented_path, overlay_path
-        
+        # Return text status based on tumor_found boolean
+        status_text = "Tumor Found" if tumor_found else "No Tumor Found"
+        return original_path, enhanced_path, segmented_path, overlay_path, status_text
+    
     except Exception as e:
         print(f"Error processing image: {e}")
-        return None, None, None, None
+        return None, None, None, None, None
 
 def generate_pdf_report(patient_data, image_paths, output_path):
     """Generate a PDF report with patient data and images"""
@@ -190,9 +207,6 @@ def home():
     return redirect(url_for('auth.login'))
 
 
-@app.route('/covid.html')
-def covid():
-    return render_template('covid.html')
 
 @app.route('/admin/index.html')
 def admin():
@@ -208,21 +222,35 @@ def manage_accounts():
 
 @app.route('/services.html')
 def services():
-    return render_template('services.html')
+    if 'user_id' in session:
+        username = session.get('username', 'User')
+        return render_template('services.html', username=username)
 
 
 @app.route('/breastcancer.html')
 def brain_tumor():
-    return render_template('breastcancer.html')
+    if 'user_id' in session:
+        username = session.get('username', 'User')
+    return render_template('breastcancer.html', username=username)
 
 
 @app.route('/contact.html')
 def contact():
-    return render_template('contact.html')
+    if 'user_id' in session:
+        username = session.get('username', 'User')
+    return render_template('contact.html', username=username)
 
 @app.route('/about.html')
 def about():
-    return render_template('about.html')
+    if 'user_id' in session:
+        username = session.get('username', 'User')
+    return render_template('about.html', username=username)
+
+@app.route('/navbar.html')
+def navbar():
+    if 'user_id' in session:
+        username = session.get('username', 'User')
+    return render_template('navbar.html', username=username)
 
 
 @app.route('/login.html')
@@ -238,14 +266,13 @@ def resultbc():
         lastname = request.form['lastname']
         patient_id = request.form['patient_id']
         file = request.files['image']
-        
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Process the image and get all four versions
-            original_path, enhanced_path, segmented_path, overlay_path = process_breast_cancer_image(filepath)
+            # Process the image and get results including tumor status
+            original_path, enhanced_path, segmented_path, overlay_path, tumor_status = process_breast_cancer_image(filepath)
             
             if all([original_path, enhanced_path, segmented_path, overlay_path]):
                 return render_template('resultbc.html', 
@@ -255,7 +282,8 @@ def resultbc():
                                     original_img=os.path.basename(original_path),
                                     enhanced_img=os.path.basename(enhanced_path),
                                     segmented_img=os.path.basename(segmented_path),
-                                    overlay_img=os.path.basename(overlay_path))
+                                    overlay_img=os.path.basename(overlay_path),
+                                    tumor_status=tumor_status)
             else:
                 flash('Error processing the image. Please try again.')
                 return redirect(url_for('brain_tumor'))
@@ -311,6 +339,8 @@ def add_header(response):
     return response
 
 if __name__ == '__main__':
+    with app.app_context():
+        session.clear()
     # Create results directory if it doesn't exist
     os.makedirs(app.config['RESULTS_FOLDER'], exist_ok=True)
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=True)
