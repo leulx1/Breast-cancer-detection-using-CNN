@@ -7,6 +7,20 @@ from functools import wraps
 from flask_mail import Message
 import smtplib
 from extension import mail
+import random
+import string
+
+#for generating secure password
+def generate_secure_password():
+    while True:
+        password = ''.join(random.choices(
+            string.ascii_letters + string.digits + "!@#$%^&*()", k=8
+        ))
+        if (any(c.isupper() for c in password) and 
+            any(c.isdigit() for c in password) and 
+            any(c in "!@#$%^&*()" for c in password)):
+            return password
+
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -166,6 +180,59 @@ def register():
             logging.debug("Database connection closed after registration")
 
     return render_template('createaccount.html')
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email'].lower()
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
+
+        if not user:
+            cur.close()
+            conn.close()
+            return jsonify(message="Email not found. Please check and try again.", success=False)
+
+        new_password = generate_secure_password()
+        hashed_password = generate_password_hash(new_password)
+
+        try:
+            cur.execute("UPDATE users SET password_hash = %s WHERE email = %s", 
+                        (hashed_password, email))
+            conn.commit()
+
+            msg = Message('Password Reset',
+                          recipients=[email])
+            msg.body = f"""
+            Hello,
+
+            A new password has been generated for your account.
+
+            New Password: {new_password}
+
+            Please log in and change it as soon as possible.
+
+            Regards,
+            Your Support Team
+            """
+            mail.send(msg)
+
+            return jsonify(message="Password successfully changed. Check your email.", success=True)
+
+        except Exception as e:
+            conn.rollback()
+            return jsonify(message="An error occurred while resetting your password.", success=False), 500
+
+        finally:
+            cur.close()
+            conn.close()
+
+    return render_template('forgotpassword.html')
+
 
 @auth_bp.route('/manage_accounts')
 @admin_required
