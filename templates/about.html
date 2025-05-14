@@ -4,6 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
   <title>DiagnoSys - About</title>
   <meta content="" name="description">
@@ -35,30 +38,33 @@
 <body>
 
   <!-- ======= Header ======= -->
-  <header id="header" class="header d-flex align-items-center fixed-top">
-    <div class="container-fluid d-flex align-items-center justify-content-between">
+<header id="header" class="header d-flex align-items-center fixed-top">
+  <div class="container-fluid d-flex align-items-center justify-content-between">
 
-      <a href="/" class="logo d-flex align-items-center  me-auto me-lg-0">
+    <a href="/" class="logo d-flex align-items-center  me-auto me-lg-0">
+      <i class="fa fa-user-md"></i>
+      {% if username %} 
+      <h1>Welcome,Dr. {{ username }}!</h1>
+    </a>
 
-        <i class="fa fa-user-md"></i>
-        <h1>DiagnoSys</h1>
-      </a>
+    <nav id="navbar" class="navbar">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="about.html"class="active">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>  
+    {% else %}  
+        <li><a href="{{ url_for('auth.login') }}">Login</a></li>  
+    {% endif %}
+      </ul>
+    </nav><!-- .navbar -->
 
-      <nav id="navbar" class="navbar">
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="about.html" class="active">About</a></li>
-          
-          <li><a href="services.html">Services</a></li>
-          <li><a href="contact.html">Contact</a></li>
-        </ul>
-      </nav><!-- .navbar -->
+    <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
+    <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
 
-      <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
-      <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
-
-    </div>
-  </header><!-- End Header -->
+  </div>
+</header><!-- End Header -->
 
   <main id="main" data-aos="fade" data-aos-delay="1500">
 
@@ -68,12 +74,7 @@
         <div class="row d-flex justify-content-center">
           <div class="col-lg-6 text-center">
             <h2>About</h2>
-            <p>Welcome to DiagnoSys, a <strong>deep learning project</strong> aimed at detecting and classifying diseases based on <strong>MRI images of the brain and X-ray scans of the chest.</strong><br>
-              We are a team of three dedicated individuals who are passionate about improving healthcare outcomes through the use of cutting-edge technology.
-               We believe that our solution has the potential to revolutionize the way diseases are diagnosed and treated.<br>
-               By harnessing the power of <strong>deep learning algorithms</strong>, we are able to analyze medical images with incredible speed and accuracy, helping doctors to make more informed decisions and improving patient outcomes.<br>
-              Our team includes experts in computer science, data analysis, and healthcare, all working together to create a better future for patients and healthcare providers alike.
-              Thank you for visiting our website. We invite you to learn more about our project and join us on our mission to make a real difference in the world of healthcare.</p>
+            <p>At Selale, we are dedicated to revolutionizing breast cancer diagnosis through cutting-edge deep learning technology. Our project, developed by Group 1, leverages the power of U-Net deep learning algorithms to detect and analyze breast cancer with exceptional speed and accuracy. By automating the analysis of medical images, we empower radiologists to make faster, more informed decisions—ultimately improving patient outcomes and saving lives.</p>
 
 
           </div>
@@ -87,13 +88,14 @@
 <footer id="footer" class="footer">
   <div class="container">
     <div class="copyright">
-      &copy; Copyright <strong><span>Team DiagnoSys</span></strong>. All Rights Reserved
+      &copy; Made By <strong><span>Group 1</span></strong>. All Rights Reserved
     </div>
-    <div class="credits">
-            Designed by Team DiagnoSys
-    </div>
+    <!-- <div class="credits">
+           Group 1
+    </div> -->
   </div>
 </footer><!-- End Footer -->
+<!-- End Footer -->
 
 <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

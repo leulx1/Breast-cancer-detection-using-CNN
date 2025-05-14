@@ -4,7 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>DiagnoSys - Contact</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
@@ -35,30 +37,34 @@
 <body>
 
   <!-- ======= Header ======= -->
-  <header id="header" class="header d-flex align-items-center fixed-top">
-    <div class="container-fluid d-flex align-items-center justify-content-between">
+  <!-- ======= Header ======= -->
+<header id="header" class="header d-flex align-items-center fixed-top">
+  <div class="container-fluid d-flex align-items-center justify-content-between">
 
-      <a href="/" class="logo d-flex align-items-center  me-auto me-lg-0">
+    <a href="/" class="logo d-flex align-items-center  me-auto me-lg-0">
+      <i class="fa fa-user-md"></i>
+       {% if current_user.is_authenticated %} 
+      <h1>Welcome,Dr. {{ username }}!</h1>
+    </a>
 
-        <i class="fa fa-user-md"></i>
-        <h1>DiagnoSys</h1>
-      </a>
+    <nav id="navbar" class="navbar">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html"class="active">Contact</a></li>
+        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>  
+    {% else %}  
+        <li><a href="{{ url_for('auth.login') }}">Login</a></li>  
+    {% endif %}
+      </ul>
+    </nav><!-- .navbar -->
 
-      <nav id="navbar" class="navbar">
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="about.html">About</a></li>
-         
-          <li><a href="services.html">Services</a></li>
-          <li><a href="contact.html" class="active">Contact</a></li>
-        </ul>
-      </nav><!-- .navbar -->
+    <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
+    <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
 
-      <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
-      <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
-
-    </div>
-  </header><!-- End Header -->
+  </div>
+</header><!-- End Header -->
 
   <main id="main" data-aos="fade" data-aos-delay="1500">
 
@@ -99,12 +105,12 @@
                 <p><br>
                 Leul Tsehaye     (leultsehaye123@gmail.com)<br>
                 </p>
-                <p><br>
-                  Karan Chaudhary     (202011038@diu.iiitvadodara.ac.in)<br>
+                 <p><br>
+                  Fasika Yemane    (fasikayemane32@gmail.com)<br>
                   </p>
                   <p><br>
-                    Karan Chaudhary     (202011038@diu.iiitvadodara.ac.in)<br>
-                    </p>
+                    H/michael Tamirat     (michaeltamirat@gmail.com)<br>
+                    </p> 
                 
               </div>
             </div>
@@ -116,7 +122,7 @@
               <div>
                 <h4>Call:</h4>
                 <p><br>
-                  Karan Chaudhary     <br>(+91 9149372288)<br>
+                 Leul Tsehaye    <br>(+251936813298)<br>
                   </p>
               </div>
             </div>
@@ -130,14 +136,13 @@
 <footer id="footer" class="footer">
   <div class="container">
     <div class="copyright">
-      &copy; Copyright <strong><span>Team DiagnoSys</span></strong>. All Rights Reserved
+      &copy; Made By <strong><span>Group 1</span></strong>. All Rights Reserved
     </div>
-    <div class="credits">
-           Designed by Team DiagnoSys
-    </div>
+    <!-- <div class="credits">
+           Group 1
+    </div> -->
   </div>
-</footer><!-- End Footer -->
-
+</footer>
 <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
 <div id="preloader">
