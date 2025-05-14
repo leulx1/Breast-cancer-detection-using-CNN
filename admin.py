@@ -1,19 +1,9 @@
-# admin.py
-from flask import Blueprint, render_template, session, redirect, url_for, flash
+from flask import Blueprint, render_template
+from flask_login import login_required,current_user
 
-# Create the admin Blueprint
-admin_bp = Blueprint('admin', __name__, template_folder='templates')
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-# Add admin route protection (before_request)
-@admin_bp.before_request
-def restrict_to_admin():
-    if 'role' not in session or session['role'] != 'admin':
-        flash('Access denied: Admin privileges required', 'danger')
-        return redirect(url_for('auth.login'))
-
-# Admin dashboard route
 @admin_bp.route('/')
+@login_required
 def index():
-    return render_template('admin/index.html')
-
-# You can add more admin routes below...
+    return render_template('admin/index.html' ,username=current_user.name)
