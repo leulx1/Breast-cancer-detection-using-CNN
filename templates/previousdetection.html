@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <title>Previous Detections</title>
+  <meta content="Previous breast cancer tumor detection results" name="description">
+  <meta content="Breast Cancer, AI, Tumor Detection, Medical Imaging" name="keywords">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <!-- Favicons -->
+  <link href="static/assets/img/medical-team.png" rel="icon">
+  <link href="static/assets/img/medical-team.png" rel="apple-touch-icon">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Cardo:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Template Main CSS File -->
+  <link href="static/assets/css/main.css" rel="stylesheet">
+
+  <style>
+    .results-container {
+      padding: 40px;
+      margin-top: 50px;
+    }
+    
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .results-table th, 
+    .results-table td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .results-table th {
+      background-color: #0062E6;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .results-table tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    
+    .results-table tr:hover {
+      background-color: #f1f1f1;
+    }
+    
+    .download-btn {
+      color: #0062E6;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .download-btn:hover {
+      text-decoration: underline;
+    }
+    
+    .positive {
+      color: #dc3545;
+      font-weight: 600;
+    }
+    
+    .negative {
+      color: #28a745;
+      font-weight: 600;
+    }
+    
+    .section-title {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #0062E6;
+    }
+    
+    .no-results {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2rem;
+      color: #6c757d;
+    }
+  </style>
+
+</head>
+
+<body>
+<!-- ======= Header ======= -->
+<header id="header" class="header d-flex align-items-center fixed-top">
+  <div class="container-fluid d-flex align-items-center justify-content-between">
+
+    <a href="/" class="logo d-flex align-items-center  me-auto me-lg-0">
+      <i class="fa fa-user-md"></i>
+       {% if current_user.is_authenticated %}
+      <h1>Welcome,Dr. {{ username }}!</h1>
+    </a>
+
+    <nav id="navbar" class="navbar">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="services.html" class="active">Services</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>  
+    {% else %}  
+        <li><a href="{{ url_for('auth.login') }}">Login</a></li>  
+    {% endif %}
+      </ul>
+    </nav><!-- .navbar -->
+
+    <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
+    <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
+
+  </div>
+</header><!-- End Header -->
+
+  <<main id="main">
+        <section class="container py-5">
+            <h2 class="text-center mb-4">Previous Detection Results</h2>
+            
+            {% if detections %}
+            <div class="table-responsive">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Patient Id</th>
+                            <th>Report</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detection in detections %}
+                        <tr>
+                            <td>{{ detection.patient_id }}</td>
+                            <td>
+                                <a href="{{ url_for('download_pdf', filename=detection.pdf_location) }}" class="btn btn-link">
+                                  <i class="bi bi-download"></i> Download
+                                </a>
+                            </td>
+                            <td class="{{ 'positive' if detection.tumor_status == 'Positive' else 'negative' }}">
+                                {{ detection.tumor_status }}
+                            </td>
+                            <td>{{ detection.created_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="no-results">
+                <p>No previous detection results found.</p>
+                <a href="/breastcancer" class="btn btn-primary">Start New Detection</a>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+
+  <!-- End #main -->
+
+  <!-- Footer -->
+  <footer id="footer" class="footer">
+    <div class="container">
+      <div class="copyright">
+        &copy; Copyright <strong><span>Group 1</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+             Group 1
+      </div>
+    </div>
+  </footer>
+  <!-- End Footer -->
+
+  <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <div id="preloader"><div class="line"></div></div>
+
+  <!-- Vendor JS Files -->
+  <script src="static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="static/assets/vendor/aos/aos.js"></script>
+  <script src="static/assets/vendor/php-email-form/validate.js"></script>
+
+  <!-- Main JS File -->
+  <script src="static/assets/js/main.js"></script>
+
+</body>
+
+</html>
