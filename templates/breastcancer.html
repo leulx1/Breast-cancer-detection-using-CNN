@@ -13,6 +13,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Cardo:wght@400;700&display=swap" rel="stylesheet">
   <link href="static/assets/css/main.css" rel="stylesheet">
   <style>
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+}
     body {
       background-image: url(static/bc.png);
       background-position: center;
@@ -77,6 +82,9 @@
     .processing-text {
       font-size: 1.5rem;
     }
+    .status-icon {
+      margin-left: 10px;
+    }
     .image-container {
       position: relative;
       width: 300px;
@@ -89,7 +97,7 @@
       object-fit: contain;
       border: 2px solid #4CAF50;
       border-radius: 5px;
-      transition: opacity 10s ease; /* Increased to 10s for slow fade; adjust this value to make slower (e.g., 15s) or faster (e.g., 5s) */
+      transition: opacity 15s ease;
     }
     .tumor-overlay {
       position: absolute;
@@ -99,7 +107,7 @@
       height: 100%;
       object-fit: contain;
       opacity: 0;
-      transition: opacity 10s ease; /* Increased to 10s for slow overlay; adjust this value to make slower (e.g., 15s) or faster (e.g., 5s) */
+      transition: opacity 15s ease;
     }
     .progress-bar {
       width: 300px;
@@ -122,13 +130,32 @@
       background-color: #00FF00;
       box-shadow: 0 0 10px #00FF00;
       z-index: 10;
-      animation: scan 3s linear infinite; /* Scan line speed; adjust duration (e.g., 5s for slower, 1s for faster) */
+      animation: scan 2s linear infinite;
     }
     @keyframes scan {
       0% { top: 0; opacity: 0; }
       5% { opacity: 1; }
       95% { opacity: 1; }
       100% { top: 100%; opacity: 0; }
+    }
+    .message-box {
+      padding: 20px;
+      border-radius: 5px;
+      font-size: 1.5rem;
+      text-align: center;
+      width: 100%;
+      cursor: pointer;
+    }
+    .red-box {
+      border: 2px solid red;
+      background-color: rgba(255, 0, 0, 0.1);
+    }
+    .green-box {
+      border: 2px solid green;
+      background-color: rgba(0, 255, 0, 0.1);
+    }
+    .invalid-input {
+      border: 1px solid red !important;
     }
   </style>
 </head>
@@ -167,15 +194,17 @@
       <div class="form-group">
         <label for="firstname">Patient First Name</label>
         <input type="text" name="firstname" id="firstname" class="form-control" required pattern="[A-Za-z]+" title="Only letters allowed">
+        <small class="text-warning" id="firstnameWarning" style="display:none;">Only letters are allowed</small>
       </div>
       <div class="form-group">
         <label for="lastname">Patient Last Name</label>
         <input type="text" name="lastname" id="lastname" class="form-control" required pattern="[A-Za-z]+" title="Only letters allowed">
+        <small class="text-warning" id="lastnameWarning" style="display:none;">Only letters are allowed</small>
       </div>
       <div class="form-group">
         <label for="patient_id">Patient ID</label>
         <input type="number" name="patient_id" id="patient_id" class="form-control" required min="6" oninput="validateID(this)">
-        <small class="text-warning" id="idWarning" style="display:none;">Patient ID must be at least 6</small>
+        <small class="text-warning" id="idWarning" style="display:none;">Patient ID must be more than 5</small>
       </div>
       <div class="form-group">
         <label for="image">Upload Mammography Image</label>
@@ -185,7 +214,7 @@
 
       <!-- Hidden result inputs -->
       <input type="hidden" name="original" id="originalInput">
-      <input type="hidden" name="enhanced      <input type="hidden" name="enhanced" id="enhancedInput">
+      <input type="hidden" name="enhanced" id="enhancedInput">
       <input type="hidden" name="segmented" id="segmentedInput">
       <input type="hidden" name="overlay" id="overlayInput">
       <input type="hidden" name="status" id="statusInput">
@@ -207,138 +236,248 @@
     <div class="processing-step" id="step1">
       <i class="fa fa-magic processing-icon"></i>
       <span class="processing-text">Enhancing image using CLAHE algorithm...</span>
+      <span class="status-icon" id="status1"><i class="fa fa-spinner fa-spin"></i></span>
     </div>
     <div class="processing-step" id="step2">
       <i class="fa fa-search processing-icon"></i>
       <span class="processing-text">Scanning for tumor regions...</span>
+      <span class="status-icon" id="status2"><i class="fa fa-spinner fa-spin"></i></span>
     </div>
     <div class="progress-bar">
       <div class="progress" id="progressBar"></div>
     </div>
+    <div id="resultMessage" class="processing-step"></div>
   </div>
 
   <script>
-    function validateID(input) {
-      const warning = document.getElementById('idWarning');
-      warning.style.display = parseInt(input.value) < 6 ? 'block' : 'none';
+    let result; // Global variable to store processing result
+    let scanLine; // Make scanLine global so we can access it later
+
+    // Name validation function
+    function validateNameInput(input, warningId) {
+      const originalValue = input.value;
+      // Remove any non-letter characters
+      input.value = input.value.replace(/[^A-Za-z]/g, '');
+      
+      // Show warning if value was changed
+      const warningElement = document.getElementById(warningId);
+      if (originalValue !== input.value) {
+        warningElement.style.display = 'block';
+        input.classList.add('invalid-input');
+      } else {
+        warningElement.style.display = 'none';
+        input.classList.remove('invalid-input');
+      }
+      
+      // Set custom validity
+      if (!/^[A-Za-z]+$/.test(input.value)) {
+        input.setCustomValidity("Only letters are allowed.");
+      } else {
+        input.setCustomValidity("");
+      }
     }
 
+    // ID validation
+    function validateID(input) {
+      const warning = document.getElementById('idWarning');
+      if (parseInt(input.value) < 6) {
+        warning.style.display = 'block';
+        input.classList.add('invalid-input');
+      } else {
+        warning.style.display = 'none';
+        input.classList.remove('invalid-input');
+      }
+    }
+
+    // File validation
     function validateFile() {
       const image = document.getElementById('image');
       const fileWarning = document.getElementById('fileWarning');
       const allowedExtensions = /(\.jpg|\.jpeg|\.png|\.bmp|\.tiff)$/i;
+      
       if (!allowedExtensions.exec(image.value)) {
         fileWarning.style.display = 'block';
+        image.classList.add('invalid-input');
         return false;
       }
+      
       fileWarning.style.display = 'none';
+      image.classList.remove('invalid-input');
       return true;
     }
 
-    async function processForm() {
+    // Form validation
+    function validateForm() {
+      // Validate names
+      validateNameInput(document.getElementById('firstname'), 'firstnameWarning');
+      validateNameInput(document.getElementById('lastname'), 'lastnameWarning');
+      
+      // Validate ID
+      validateID(document.getElementById('patient_id'));
+      
+      // Validate file
       if (!validateFile()) return false;
+      
+      // Check if all fields are valid
+      const firstNameValid = document.getElementById('firstname').checkValidity();
+      const lastNameValid = document.getElementById('lastname').checkValidity();
+      const patientIdValid = document.getElementById('patient_id').checkValidity();
+      const fileValid = document.getElementById('image').checkValidity();
+      
+      return firstNameValid && lastNameValid && patientIdValid && fileValid;
+    }
 
-      const processingScreen = document.getElementById('processingScreen');
-      processingScreen.style.display = 'flex';
+    async function processForm() {
+    if (!validateForm()) {
+        // Show validation messages
+        document.getElementById('firstname').reportValidity();
+        document.getElementById('lastname').reportValidity();
+        document.getElementById('patient_id').reportValidity();
+        document.getElementById('image').reportValidity();
+        return false;
+    }
 
-      const fileInput = document.getElementById('image');
-      const formData = new FormData(document.getElementById('bcForm'));
+    const processingScreen = document.getElementById('processingScreen');
+    processingScreen.style.display = 'flex';
 
-      try {
+    const fileInput = document.getElementById('image');
+    const formData = new FormData(document.getElementById('bcForm'));
+
+    try {
         // Show original image
         if (fileInput.files && fileInput.files[0]) {
-          const reader = new FileReader();
-          reader.onload = e => document.getElementById('originalImage').src = e.target.result;
-          reader.readAsDataURL(fileInput.files[0]);
+            const reader = new FileReader();
+            reader.onload = e => document.getElementById('originalImage').src = e.target.result;
+            reader.readAsDataURL(fileInput.files[0]);
         }
 
+        // Step 1: Enhancing
         document.getElementById('step1').classList.add('active');
-        document.getElementById('progressBar').style.width = '30%';
+        document.getElementById('progressBar').style.width = '0%';
 
         // Send POST request to backend
         const response = await fetch('/resultfordetection', {
-          method: 'POST',
-          body: formData
+            method: 'POST',
+            body: formData
         });
 
-        const result = await response.json();
-
+        result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Processing failed');
 
-        // Set enhanced image src and start slow fade transition
+        // Show the enhanced image loading process
         const enhancedImage = document.getElementById('enhancedImage');
         enhancedImage.src = result.enhanced_path;
-        enhancedImage.style.opacity = '1';
-        document.getElementById('originalImage').style.opacity = '0';
+        
+        // Wait for the enhanced image to load
+        await new Promise((resolve) => {
+            enhancedImage.onload = () => {
+                // Start the slow fade-in transition (15 seconds)
+                enhancedImage.style.opacity = '1';
+                document.getElementById('originalImage').style.opacity = '0';
+                
+                // Only complete step 1 after the transition is complete
+                setTimeout(() => {
+                    // Show green checkmark for step 1
+                    document.getElementById('status1').innerHTML = '<i class="fa fa-check" style="color: green;"></i>';
+                    document.getElementById('progressBar').style.width = '50%';
+                    resolve();
+                }, 15000);
+            };
+            
+            // In case the image is already loaded (from cache)
+            if (enhancedImage.complete) {
+                enhancedImage.onload();
+            }
+        });
 
-        // Wait for the image transition to complete (10 seconds)
-        // Adjust this delay to match the CSS transition time in .mammography-preview (e.g., 15000 for 15s)
-        await new Promise(resolve => setTimeout(resolve, 10000));
-
+        // Step 2: Scanning
         document.getElementById('step2').classList.add('active');
-        document.getElementById('progressBar').style.width = '60%';
 
-        // Add scan-line animation
+        // Add scan-line animation during scanning
         const container = document.querySelector('.image-container');
-        const scanLine = document.createElement('div');
+        scanLine = document.createElement('div');
         scanLine.className = 'scan-line';
         container.appendChild(scanLine);
 
-        // If tumor found, start slow overlay transition
-        if (result.tumor_found) {
-          const overlay = document.getElementById('tumorOverlay');
-          overlay.src = result.segmented_path;
-          overlay.style.opacity = '1';
-          // Wait for the overlay transition to complete (10 seconds)
-          // Adjust this delay to match the CSS transition time in .tumor-overlay (e.g., 15000 for 15s)
-          await new Promise(resolve => setTimeout(resolve, 10000));
-        } else {
-          // If no tumor, wait the same duration for consistency
-          await new Promise(resolve => setTimeout(resolve, 10000));
-        }
+        // Simulate scanning process (10 seconds)
+        await new Promise(resolve => setTimeout(resolve, 10000));
 
-        // Remove scan-line after overlay is fully visible
-        container.removeChild(scanLine);
-
-        document.getElementById('progressBar').style.width = '90%';
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Show green checkmark for step 2
+        document.getElementById('status2').innerHTML = '<i class="fa fa-check" style="color: green;"></i>';
         document.getElementById('progressBar').style.width = '100%';
 
-        // Prepare POST redirect to /resultbc
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/resultbc';
-
-        const fields = {
-          firstname: document.getElementById('firstname').value,
-          lastname: document.getElementById('lastname').value,
-          patient_id: document.getElementById('patient_id').value,
-          original: result.original_path,
-          enhanced: result.enhanced_path,
-          segmented: result.segmented_path,
-          overlay: result.overlay_path,
-          status: result.status_text
-        };
-
-        for (const [name, value] of Object.entries(fields)) {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = name;
-          input.value = value;
-          form.appendChild(input);
+        // If tumor found, slow overlay transition (15 seconds)
+        if (result.tumor_found) {
+            const overlay = document.getElementById('tumorOverlay');
+            overlay.src = result.segmented_path;
+            overlay.style.opacity = '1';
+            await new Promise(resolve => setTimeout(resolve, 15000));
+        } else {
+            // Wait same duration for consistency if no tumor
+            await new Promise(resolve => setTimeout(resolve, 15000));
         }
 
-        document.body.appendChild(form);
-        form.submit();
+        // Remove scan-line after overlay transition is complete
+        if (scanLine && scanLine.parentNode) {
+            container.removeChild(scanLine);
+        }
 
-      } catch (error) {
+        // Show result message with manual click option
+        const messageDiv = document.getElementById('resultMessage');
+        if (result.tumor_found) {
+            messageDiv.innerHTML = '<div class="message-box red-box" onclick="proceedToResult()">Cancerous tumor found. Click to proceed.</div>';
+        } else {
+            messageDiv.innerHTML = '<div class="message-box green-box" onclick="proceedToResult()">No cancerous tumor found. Click to proceed.</div>';
+        }
+        messageDiv.classList.add('active');
+
+    } catch (error) {
         console.error('Error:', error);
         alert('An error occurred during processing. Please try again.');
         processingScreen.style.display = 'none';
+    }
+}
+
+    function proceedToResult() {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/resultbc';
+
+      const fields = {
+        firstname: document.getElementById('firstname').value,
+        lastname: document.getElementById('lastname').value,
+        patient_id: document.getElementById('patient_id').value,
+        original: result.original_path,
+        enhanced: result.enhanced_path,
+        segmented: result.segmented_path,
+        overlay: result.overlay_path,
+        status: result.status_text
+      };
+
+      for (const [name, value] of Object.entries(fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
       }
+
+      document.body.appendChild(form);
+      form.submit();
     }
 
+    // Event listeners
     document.getElementById('submitBtn').addEventListener('click', processForm);
+    
+    document.getElementById('firstname').addEventListener('input', function() {
+      validateNameInput(this, 'firstnameWarning');
+    });
+
+    document.getElementById('lastname').addEventListener('input', function() {
+      validateNameInput(this, 'lastnameWarning');
+    });
+
+    document.getElementById('image').addEventListener('change', validateFile);
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"></script>
