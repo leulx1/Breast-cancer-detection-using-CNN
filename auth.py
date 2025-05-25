@@ -143,12 +143,22 @@ def register():
             if role.lower() == 'radiologist':
                 msg = Message('Your Account Details', recipients=[email])
                 msg.body = f"""
-                Hello {name},Welcome to Selale Comphrensive Hospital Breast Cancer Detection System!!!
-                Your account has been created successfully!
-                Here are your login credentials:
-                Email: {email}
-                Password: {password}
-                """
+                        Dear {name},
+
+                        Welcome to Salale Comprehensive Hospital's Breast Cancer Detection System!
+
+                        Your account has been successfully created. Below are your login credentials:
+
+                        Email: {email}  
+                        Password: {password}
+
+                        For security reasons, we recommend logging in and changing your password as soon as possible.
+
+                        If you have any questions or need assistance, feel free to contact our support team.
+
+                        Best regards,  
+                        Salale Comprehensive Hospital System Administrator
+                        """
                 try:
                     mail.send(msg)
                     logging.info(f"Email successfully sent to {email}")
@@ -332,51 +342,41 @@ def logout():
 
 
 # Save to DB route
-@auth_bp.route('/save_to_db', methods=['POST'])
-@login_required
-def save_to_db():
+# @auth_bp.route('/save_to_db', methods=['POST'])
+# @login_required
+# def save_to_db():
     try:
         data = {
-            'firstname': request.form['firstname'],
-            'lastname': request.form['lastname'],
             'patient_id': request.form['patient_id'],
-            'overlay_img': request.form['overlay_img'],
+            'pdf_location': request.form.get('pdf_location'),  # Assuming PDF location is sent in the form
             'tumor_status': request.form['tumor_status']
         }
         if not all(data.values()):
             return jsonify({"status": "no", "message": "All fields are required"}), 400
 
-        img_data = data['overlay_img']
-        if img_data.startswith('data:image'):
-            img_data = img_data.split('base64,')[-1]
-        img_data = img_data.strip()
-        padding = len(img_data) % 4
-        if padding:
-            img_data += '=' * (4 - padding)
-
-        try:
-            image_binary = base64.b64decode(img_data)
-        except Exception as e:
-            return jsonify({"status": "no", "message": "Invalid image data - must be properly encoded base64"}), 400
-
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO analysis_results 
-            (patient_first_name, patient_last_name, patient_id, result_image, tumor_status, created_by)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO previous_detection 
+            (patient_id, pdf_location, tumor_status, created_by)
+            VALUES (%s, %s, %s, %s)
         """, (
-            data['firstname'], data['lastname'], data['patient_id'],
-            image_binary, data['tumor_status'], current_user.id
+            data['patient_id'],
+            data['pdf_location'],
+            data['tumor_status'],
+            current_user.id
         ))
         conn.commit()
         return jsonify({"status": "yes", "message": "Data saved successfully"})
     except Exception as e:
-        if 'conn' in locals(): conn.rollback()
+        if 'conn' in locals():
+            conn.rollback()
         return jsonify({"status": "no", "message": f"Error: {str(e)}"}), 500
     finally:
-        if 'cur' in locals(): cur.close()
-        if 'conn' in locals(): conn.close()
+        if 'cur' in locals():
+            cur.close()
+        if 'conn' in locals():
+            conn.close()
 
 @auth_bp.route('/change_profile', methods=['GET', 'POST'])
 @login_required
@@ -414,3 +414,4 @@ def change_profile():
             conn.close()
 
     return render_template('change_profile.html')
+
