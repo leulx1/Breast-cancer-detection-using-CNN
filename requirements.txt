@@ -1,0 +1,11 @@
+Flask==3.1.1
+Flask_Login==0.6.3
+flask_mail==0.10.0
+numpy==1.24.4
+opencv_python==4.11.0.86
+psycopg2==2.9.10
+psycopg2_binary==2.9.10
+PyPDF2==3.0.1
+reportlab==4.4.0
+tensorflow==2.19.0
+Werkzeug==3.1.3
