@@ -41,11 +41,12 @@
 <header id="header" class="header d-flex align-items-center fixed-top">
   <div class="container-fluid d-flex align-items-center justify-content-between">
 
-    <a href="/" class="logo d-flex align-items-center  me-auto me-lg-0">
-      <i class="fa fa-user-md"></i>
-      {% if username %} 
-      <h1>Welcome,Dr. {{ username }}!</h1>
-    </a>
+    <a href="{{ url_for('auth.change_profile') }}"class="logo d-flex align-items-center  me-auto me-lg-0">
+
+        <i class="fa fa-user-md"></i>
+        {% if current_user.is_authenticated %}
+        <h1>Welcome,Dr. {{ username }}!</h1>
+      </a>
 
     <nav id="navbar" class="navbar">
       <ul>
@@ -74,7 +75,7 @@
         <div class="row d-flex justify-content-center">
           <div class="col-lg-6 text-center">
             <h2>About</h2>
-            <p>At Selale, we are dedicated to revolutionizing breast cancer diagnosis through cutting-edge deep learning technology. Our project, developed by Group 1, leverages the power of U-Net deep learning algorithms to detect and analyze breast cancer with exceptional speed and accuracy. By automating the analysis of medical images, we empower radiologists to make faster, more informed decisions—ultimately improving patient outcomes and saving lives.</p>
+            <p>At Salale, we are dedicated to revolutionizing breast cancer diagnosis through cutting-edge deep learning technology. Our project, developed by Group 1, leverages the power of U-Net deep learning algorithms to detect and analyze breast cancer with exceptional speed and accuracy. By automating the analysis of medical images, we empower radiologists to make faster, more informed decisions—ultimately improving patient outcomes and saving lives.</p>
 
 
           </div>
