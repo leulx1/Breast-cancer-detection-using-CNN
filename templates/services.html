@@ -4,10 +4,16 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
-  <title>DiagnoSys - Breast Cancer Segmentation</title>
+  <title>Breast Cancer Segmentation</title>
   <meta content="AI-based breast cancer tumor segmentation system" name="description">
   <meta content="Breast Cancer, AI, Tumor Segmentation, Medical Imaging" name="keywords">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
   <!-- Favicons -->
   <link href="static/assets/img/medical-team.png" rel="icon">
@@ -16,7 +22,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Cardo:wght@400;700&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -24,6 +30,8 @@
   <link href="static/assets/vendor/aos/aos.css" rel="stylesheet">
   <link href="static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
   <link href="static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 
   <!-- Template Main CSS File -->
   <link href="static/assets/css/main.css" rel="stylesheet">
@@ -83,29 +91,34 @@
 </head>
 
 <body>
+<!-- ======= Header ======= -->
+<header id="header" class="header d-flex align-items-center fixed-top">
+  <div class="container-fluid d-flex align-items-center justify-content-between">
 
-  <!-- ======= Header ======= -->
-  <header id="header" class="header d-flex align-items-center fixed-top">
-    <div class="container-fluid d-flex align-items-center justify-content-between">
-      <a href="/" class="logo d-flex align-items-center me-auto me-lg-0">
-        <i class="fa fa-user-md"></i>
-        <h1>DiagnoSys</h1>
-      </a>
+    <a href="{{ url_for('auth.change_profile') }}" class="logo d-flex align-items-center  me-auto me-lg-0">
+      <i class="fa fa-user-md"></i>
+       {% if current_user.is_authenticated %}
+      <h1>Welcome,Dr. {{ username }}!</h1>
+    </a>
 
-      <nav id="navbar" class="navbar">
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="services.html" class="active">Services</a></li>
-          <li><a href="contact.html">Contact</a></li>
-        </ul>
-      </nav>
+    <nav id="navbar" class="navbar">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="services.html" class="active">Services</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>  
+    {% else %}  
+        <li><a href="{{ url_for('auth.login') }}">Login</a></li>  
+    {% endif %}
+      </ul>
+    </nav><!-- .navbar -->
 
-      <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
-      <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
-    </div>
-  </header>
-  <!-- End Header -->
+    <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
+    <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
+
+  </div>
+</header><!-- End Header -->
 
   <main id="main" data-aos="fade" data-aos-delay="1500">
 
@@ -121,13 +134,12 @@
           <div class="service-item">
             <!-- <img src="static/icons/breastcancer.png" alt="Breast Cancer"> -->
             <h4><a href="breastcancer.html" class="btn-get-started">AI Breast Cancer Detection</a></h4>
-            <p>Our advanced deep learning model using Convolutional Neural Networks (CNNs) analyzes mammograms to accurately segment and highlight potential tumor regions with high precision.</p>
+            <p>Click here to begin the Detection</p>
           </div>
 
           <div class="service-item">
-            <!-- <img src="static/icons/results.png" alt="Radiologist Detections"> -->
-            <h4><a href="results.html" class="btn-get-started">Previous Results</a></h4>
-            <p>View historical assessments from board-certified radiologists. Compare their manual annotations and diagnoses with our AI system's findings for comprehensive analysis.</p>
+            <h4><a href="previousdetection.html" class="btn-get-started">Previous Results</a></h4>
+            <p>View your previous results.</p>
           </div>
         </div>
       </div>
@@ -141,10 +153,10 @@
   <footer id="footer" class="footer">
     <div class="container">
       <div class="copyright">
-        &copy; Copyright <strong><span>Team DiagnoSys</span></strong>. All Rights Reserved
+        &copy; Copyright <strong><span>Group 1</span></strong>. All Rights Reserved
       </div>
       <div class="credits">
-        Designed by Team DiagnoSys
+             Group 1
       </div>
     </div>
   </footer>
