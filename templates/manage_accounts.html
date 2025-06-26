@@ -2,6 +2,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Manage Accounts</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminstyle.css') }}">
@@ -15,7 +18,6 @@
             </label>
         </h2>
         <span class="notification" id="notificationBtn">
-            <i class="fa fa-bell" aria-hidden="true"></i>
             <span id="notificationNum"></span>
         </span>
     </header>
@@ -24,7 +26,42 @@
     </div>
 
     <div class="body">
-        {% include 'navbar.html' %}
+    <nav class="side-bar">
+    <div class="user-p">
+        <img src="{{ url_for('static', filename='assets/img/icons/user.png') }}" alt="User">
+        <h4>
+            {% if current_user.is_authenticated %}
+                {{ username }}
+            {% endif %}
+        </h4>
+    </div>
+    <ul id="navList">
+        <li>
+            <a href="{{ url_for('admin.index') }}">
+                <i class="fa fa-tachometer" aria-hidden="true"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('auth.register') }}">
+                <i class="fa fa-user" aria-hidden="true"></i>
+                <span>Create User</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('auth.manage_accounts') }}">
+                <i class="fa fa-users" aria-hidden="true"></i>
+                <span>Manage Users</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('auth.logout') }}">
+                <i class="fa fa-sign-out" aria-hidden="true"></i>
+                <span>Logout</span>
+            </a>
+        </li>
+    </ul>
+</nav>
         <section class="section-1">
             <div class="dashboard-container">
                 <h2 class="dashboard-heading">Manage User Accounts</h2>
