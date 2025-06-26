@@ -13,11 +13,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Cardo:wght@400;700&display=swap" rel="stylesheet">
   <link href="static/assets/css/main.css" rel="stylesheet">
   <style>
-        input[type=number]::-webkit-outer-spin-button,
-        input[type=number]::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-}
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
     body {
       background-image: url(static/bc.png);
       background-position: center;
@@ -164,11 +164,12 @@
   <!-- ======= Header ======= -->
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid d-flex align-items-center justify-content-between">
-      <a href="/" class="logo d-flex align-items-center me-auto me-lg-0">
-        <i class="fa fa-user-md"></i>
-        {% if username %}
-        <h1>Welcome, Dr. {{ username }}!</h1>
-      </a>
+      <a href="{{ url_for('auth.change_profile') }}" class="logo d-flex align-items-center  me-auto me-lg-0">
+      <i class="fa fa-user-md"></i>
+       {% if current_user.is_authenticated %}
+      <h1>Welcome,Dr. {{ username }}!</h1>
+    </a>
+
       <nav id="navbar" class="navbar">
         <ul>
           <li><a href="/">Home</a></li>
@@ -203,8 +204,8 @@
       </div>
       <div class="form-group">
         <label for="patient_id">Patient ID</label>
-        <input type="number" name="patient_id" id="patient_id" class="form-control" required min="6" oninput="validateID(this)">
-        <small class="text-warning" id="idWarning" style="display:none;">Patient ID must be more than 5</small>
+        <input type="number" name="patient_id" id="patient_id" class="form-control" required min="100000" max="99999999999" step="1" oninput="validateID(this)">
+        <small class="text-warning" id="idWarning" style="display:none;">Patient ID should be at least 6 digits</small>
       </div>
       <div class="form-group">
         <label for="image">Upload Mammography Image</label>
@@ -277,15 +278,19 @@
       }
     }
 
-    // ID validation
+    // ID validation - Ensures exactly 6 digits
     function validateID(input) {
       const warning = document.getElementById('idWarning');
-      if (parseInt(input.value) < 6) {
+      const value = input.valueAsNumber;
+      
+      if (isNaN(value) || value < 100000 || value > 99999999999999999 || !Number.isInteger(value)) {
         warning.style.display = 'block';
         input.classList.add('invalid-input');
+        input.setCustomValidity("Patient ID should be at least 6 digits");
       } else {
         warning.style.display = 'none';
         input.classList.remove('invalid-input');
+        input.setCustomValidity("");
       }
     }
 
@@ -298,145 +303,139 @@
       if (!allowedExtensions.exec(image.value)) {
         fileWarning.style.display = 'block';
         image.classList.add('invalid-input');
+        image.setCustomValidity("Please upload a valid image file");
         return false;
       }
       
       fileWarning.style.display = 'none';
       image.classList.remove('invalid-input');
+      image.setCustomValidity("");
       return true;
     }
 
     // Form validation
     function validateForm() {
-      // Validate names
+      // Call validation functions to update custom validity
       validateNameInput(document.getElementById('firstname'), 'firstnameWarning');
       validateNameInput(document.getElementById('lastname'), 'lastnameWarning');
-      
-      // Validate ID
       validateID(document.getElementById('patient_id'));
+      validateFile();
       
-      // Validate file
-      if (!validateFile()) return false;
-      
-      // Check if all fields are valid
-      const firstNameValid = document.getElementById('firstname').checkValidity();
-      const lastNameValid = document.getElementById('lastname').checkValidity();
-      const patientIdValid = document.getElementById('patient_id').checkValidity();
-      const fileValid = document.getElementById('image').checkValidity();
-      
-      return firstNameValid && lastNameValid && patientIdValid && fileValid;
+      // Check if form is valid
+      const form = document.getElementById('bcForm');
+      if (!form.checkValidity()) {
+        // Trigger browser validation messages
+        form.reportValidity();
+        return false;
+      }
+      return true;
     }
 
     async function processForm() {
-    if (!validateForm()) {
-        // Show validation messages
-        document.getElementById('firstname').reportValidity();
-        document.getElementById('lastname').reportValidity();
-        document.getElementById('patient_id').reportValidity();
-        document.getElementById('image').reportValidity();
-        return false;
+      if (!validateForm()) {
+          return false;
+      }
+
+      const processingScreen = document.getElementById('processingScreen');
+      processingScreen.style.display = 'flex';
+
+      const fileInput = document.getElementById('image');
+      const formData = new FormData(document.getElementById('bcForm'));
+
+      try {
+          // Show original image
+          if (fileInput.files && fileInput.files[0]) {
+              const reader = new FileReader();
+              reader.onload = e => document.getElementById('originalImage').src = e.target.result;
+              reader.readAsDataURL(fileInput.files[0]);
+          }
+
+          // Step 1: Enhancing
+          document.getElementById('step1').classList.add('active');
+          document.getElementById('progressBar').style.width = '0%';
+
+          // Send POST request to backend
+          const response = await fetch('/resultfordetection', {
+              method: 'POST',
+              body: formData
+          });
+
+          result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Processing failed');
+
+          // Show the enhanced image loading process
+          const enhancedImage = document.getElementById('enhancedImage');
+          enhancedImage.src = result.enhanced_path;
+          
+          // Wait for the enhanced image to load
+          await new Promise((resolve) => {
+              enhancedImage.onload = () => {
+                  // Start the slow fade-in transition (15 seconds)
+                  enhancedImage.style.opacity = '1';
+                  document.getElementById('originalImage').style.opacity = '0';
+                  
+                  // Only complete step 1 after the transition is complete
+                  setTimeout(() => {
+                      // Show green checkmark for step 1
+                      document.getElementById('status1').innerHTML = '<i class="fa fa-check" style="color: green;"></i>';
+                      document.getElementById('progressBar').style.width = '50%';
+                      resolve();
+                  }, 15000);
+              };
+              
+              // In case the image is already loaded (from cache)
+              if (enhancedImage.complete) {
+                  enhancedImage.onload();
+              }
+          });
+
+          // Step 2: Scanning
+          document.getElementById('step2').classList.add('active');
+
+          // Add scan-line animation during scanning
+          const container = document.querySelector('.image-container');
+          scanLine = document.createElement('div');
+          scanLine.className = 'scan-line';
+          container.appendChild(scanLine);
+
+          // Simulate scanning process (10 seconds)
+          await new Promise(resolve => setTimeout(resolve, 10000));
+
+          // Show green checkmark for step 2
+          document.getElementById('status2').innerHTML = '<i class="fa fa-check" style="color: green;"></i>';
+          document.getElementById('progressBar').style.width = '100%';
+
+          // If tumor found, slow overlay transition (15 seconds)
+          if (result.tumor_found) {
+              const overlay = document.getElementById('tumorOverlay');
+              overlay.src = result.segmented_path;
+              overlay.style.opacity = '1';
+              await new Promise(resolve => setTimeout(resolve, 15000));
+          } else {
+              // Wait same duration for consistency if no tumor
+              await new Promise(resolve => setTimeout(resolve, 15000));
+          }
+
+          // Remove scan-line after overlay transition is complete
+          if (scanLine && scanLine.parentNode) {
+              container.removeChild(scanLine);
+          }
+
+          // Show result message with manual click option
+          const messageDiv = document.getElementById('resultMessage');
+          if (result.tumor_found) {
+              messageDiv.innerHTML = '<div class="message-box red-box" onclick="proceedToResult()">Cancerous tumor found. Click to proceed.</div>';
+          } else {
+              messageDiv.innerHTML = '<div class="message-box green-box" onclick="proceedToResult()">No cancerous tumor found. Click to proceed.</div>';
+          }
+          messageDiv.classList.add('active');
+
+      } catch (error) {
+          console.error('Error:', error);
+          alert('An error occurred during processing. Please try again.');
+          processingScreen.style.display = 'none';
+      }
     }
-
-    const processingScreen = document.getElementById('processingScreen');
-    processingScreen.style.display = 'flex';
-
-    const fileInput = document.getElementById('image');
-    const formData = new FormData(document.getElementById('bcForm'));
-
-    try {
-        // Show original image
-        if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = e => document.getElementById('originalImage').src = e.target.result;
-            reader.readAsDataURL(fileInput.files[0]);
-        }
-
-        // Step 1: Enhancing
-        document.getElementById('step1').classList.add('active');
-        document.getElementById('progressBar').style.width = '0%';
-
-        // Send POST request to backend
-        const response = await fetch('/resultfordetection', {
-            method: 'POST',
-            body: formData
-        });
-
-        result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Processing failed');
-
-        // Show the enhanced image loading process
-        const enhancedImage = document.getElementById('enhancedImage');
-        enhancedImage.src = result.enhanced_path;
-        
-        // Wait for the enhanced image to load
-        await new Promise((resolve) => {
-            enhancedImage.onload = () => {
-                // Start the slow fade-in transition (15 seconds)
-                enhancedImage.style.opacity = '1';
-                document.getElementById('originalImage').style.opacity = '0';
-                
-                // Only complete step 1 after the transition is complete
-                setTimeout(() => {
-                    // Show green checkmark for step 1
-                    document.getElementById('status1').innerHTML = '<i class="fa fa-check" style="color: green;"></i>';
-                    document.getElementById('progressBar').style.width = '50%';
-                    resolve();
-                }, 15000);
-            };
-            
-            // In case the image is already loaded (from cache)
-            if (enhancedImage.complete) {
-                enhancedImage.onload();
-            }
-        });
-
-        // Step 2: Scanning
-        document.getElementById('step2').classList.add('active');
-
-        // Add scan-line animation during scanning
-        const container = document.querySelector('.image-container');
-        scanLine = document.createElement('div');
-        scanLine.className = 'scan-line';
-        container.appendChild(scanLine);
-
-        // Simulate scanning process (10 seconds)
-        await new Promise(resolve => setTimeout(resolve, 10000));
-
-        // Show green checkmark for step 2
-        document.getElementById('status2').innerHTML = '<i class="fa fa-check" style="color: green;"></i>';
-        document.getElementById('progressBar').style.width = '100%';
-
-        // If tumor found, slow overlay transition (15 seconds)
-        if (result.tumor_found) {
-            const overlay = document.getElementById('tumorOverlay');
-            overlay.src = result.segmented_path;
-            overlay.style.opacity = '1';
-            await new Promise(resolve => setTimeout(resolve, 15000));
-        } else {
-            // Wait same duration for consistency if no tumor
-            await new Promise(resolve => setTimeout(resolve, 15000));
-        }
-
-        // Remove scan-line after overlay transition is complete
-        if (scanLine && scanLine.parentNode) {
-            container.removeChild(scanLine);
-        }
-
-        // Show result message with manual click option
-        const messageDiv = document.getElementById('resultMessage');
-        if (result.tumor_found) {
-            messageDiv.innerHTML = '<div class="message-box red-box" onclick="proceedToResult()">Cancerous tumor found. Click to proceed.</div>';
-        } else {
-            messageDiv.innerHTML = '<div class="message-box green-box" onclick="proceedToResult()">No cancerous tumor found. Click to proceed.</div>';
-        }
-        messageDiv.classList.add('active');
-
-    } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred during processing. Please try again.');
-        processingScreen.style.display = 'none';
-    }
-}
 
     function proceedToResult() {
       const form = document.createElement('form');
@@ -475,6 +474,10 @@
 
     document.getElementById('lastname').addEventListener('input', function() {
       validateNameInput(this, 'lastnameWarning');
+    });
+
+    document.getElementById('patient_id').addEventListener('input', function() {
+      validateID(this);
     });
 
     document.getElementById('image').addEventListener('change', validateFile);
