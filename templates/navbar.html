@@ -1,11 +1,22 @@
+<style>
+.user-p h4 {
+    color: red !important; /* Temporary to test visibility */
+    font-size: 20px !important;
+}
+</style>
+
 <nav class="side-bar">
     <div class="user-p">
-        <img src="{{ url_for('static', filename='/assets/img/icons/user.png') }}" alt="User">
-        <h4>{% if username %}{{ username }}{% endif %}</h4>
+        <img src="{{ url_for('static', filename='assets/img/icons/user.png') }}" alt="User">
+        <h4>
+            {% if current_user.is_authenticated %}
+                {{ username }}
+            {% endif %}
+        </h4>
     </div>
     <ul id="navList">
         <li>
-            <a href=href="{{ url_for('admin.index') }}">
+            <a href="{{ url_for('admin.index') }}">
                 <i class="fa fa-tachometer" aria-hidden="true"></i>
                 <span>Dashboard</span>
             </a>
