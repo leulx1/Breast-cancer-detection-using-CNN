@@ -3,7 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Breast Cancer Analysis Results</title>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Breast Cancer Detection Results</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -72,25 +75,20 @@
             font-size: 1.1rem;
             min-width: 200px;
         }
-
-.btn-primary {
-    background-color: #0062cc;
-    border: none;
-}
-
-.btn-success {
-    background-color: #28a745;
-    border: none;
-}
-
-.btn-primary:hover {
-    background-color: #004ba0;
-}
-
-.btn-success:hover {
-    background-color: #218838;
-}
-        /* Modal styles for full-size image */
+        .btn-primary {
+            background-color: #0062cc;
+            border: none;
+        }
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #004ba0;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
         .image-modal .modal-dialog {
             max-width: 90%;
             max-height: 90vh;
@@ -121,106 +119,201 @@
             opacity: 1;
             z-index: 1000;
         }
+        .status-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .status-found, .status-none {
+            display: block;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        .status-found {
+            color: #ffffff;
+            background-color: #dc3545;
+            border: 1px solid #c82333;
+        }
+        .status-none {
+            color: #ffffff;
+            background-color: #28a745;
+            border: 1px solid #218838;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            border: none;
+        }
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
-    <header id="header" class="header align-items-center fixed-top">
-        <!-- Your header content remains the same -->
-    </header>
 
-    <div class="result-container">
-        <div class="results-header">
-            <h2><i class="fa fa-check-circle"></i> Breast Cancer Analysis Results</h2>
-            <p class="mb-0">Review the processed images below</p>
-        </div>
+<div class="result-container">
+    <div class="results-header">
+        <h2><i class="fa fa-check-circle"></i> Breast Cancer Detection Results</h2>
+        <p class="mb-0">Review the processed images below</p>
+    </div>
 
-        <div class="patient-info">
-            <h3>Patient Information</h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Name:</strong> {{fn}} {{ln}}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Patient ID:</strong> {{pid}}</p>
-                </div>
+    <div class="patient-info">
+        <h3>Patient Information</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Name:</strong> {{fn}} {{ln}}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Patient ID:</strong> {{pid}}</p>
             </div>
         </div>
+    </div>
 
-        <h3 class="mb-4">Image Analysis Results</h3>
-        
-        <div class="image-grid">
-            <div class="image-card" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showFullImage('static/results/{{original_img}}', 'Original Mammogram')">
-                <img src="static/results/{{original_img}}" alt="Original Image">
-                <div class="image-title">Original Mammogram</div>
-            </div>
-            
-            <div class="image-card" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showFullImage('static/results/{{enhanced_img}}', 'Enhanced Image (CLAHE)')">
-                <img src="static/results/{{enhanced_img}}" alt="Enhanced Image">
-                <div class="image-title">Enhanced Image (CLAHE)</div>
-            </div>
-            
-            <div class="image-card" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showFullImage('static/results/{{segmented_img}}', 'Segmentation Mask')">
-                <img src="static/results/{{segmented_img}}" alt="Segmented Image">
-                <div class="image-title">Segmentation Mask</div>
-            </div>
-            
-            <div class="image-card" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showFullImage('static/results/{{overlay_img}}', 'Overlay Visualization')">
-                <img src="static/results/{{overlay_img}}" alt="Overlay Image">
-                <div class="image-title">Overlay Visualization</div>
-            </div>
+    <h3 class="mb-4">Image Analysis Results</h3>
+
+    <div class="image-grid">
+        <div class="image-card" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showFullImage('static/results/{{original_img}}', 'Original Mammogram')">
+            <img src="static/results/{{original_img}}" alt="Original Image">
+            <div class="image-title">Original Mammogram</div>
         </div>
 
-        <div class="text-center">
-            <a href="/breastcancer.html" class="btn btn-primary btn-analyze">
-                <i class="fa fa-arrow-left"></i> Analyze Another Image
-            </a>
+        <div class="image-card" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showFullImage('static/results/{{enhanced_img}}', 'Enhanced Image (CLAHE)')">
+            <img src="static/results/{{enhanced_img}}" alt="Enhanced Image">
+            <div class="image-title">Enhanced Image (CLAHE)</div>
         </div>
-        <!-- Add this near the Analyze Another Image button -->
-<div class="text-center mt-4">
-    <form action="/generate_report" method="POST" style="display: inline-block;">
-        <input type="hidden" name="firstname" value="{{fn}}">
-        <input type="hidden" name="lastname" value="{{ln}}">
-        <input type="hidden" name="patient_id" value="{{pid}}">
-        <input type="hidden" name="original_img" value="{{original_img}}">
-        <input type="hidden" name="enhanced_img" value="{{enhanced_img}}">
-        <input type="hidden" name="segmented_img" value="{{segmented_img}}">
-        <input type="hidden" name="overlay_img" value="{{overlay_img}}">
-        <button type="submit" class="btn btn-success btn-analyze">
-            <i class="fa fa-file-pdf-o"></i> Generate Report
-        </button>
-    </form>
-    <a href="/breastcancer.html" class="btn btn-primary btn-analyze">
-        <i class="fa fa-arrow-left"></i> Analyze Another Image
-    </a>
+
+        <div class="image-card" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showFullImage('static/results/{{segmented_img}}', 'Segmentation Mask')">
+            <img src="static/results/{{segmented_img}}" alt="Segmented Image">
+            <div class="image-title">Suspected areas</div>
+        </div>
+
+        <div class="image-card" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showFullImage('static/results/{{overlay_img}}', 'Overlay Visualization')">
+            <img src="static/results/{{overlay_img}}" alt="Overlay Image">
+            <div class="image-title">Overlay Visualization</div>
+        </div>
+    </div>
+
+    <!-- Tumor Status -->
+    <div class="status-container">
+        {% if tumor_status == 'Cancerous Tumor Found' %}
+            <p class="status-found">{{ tumor_status }}</p>
+        {% else %}
+            <p class="status-none">{{ tumor_status }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons mb-5">
+        <form id="generate-report-form" action="/generate_report" method="POST">
+            <input type="hidden" name="firstname" value="{{fn}}">
+            <input type="hidden" name="lastname" value="{{ln}}">
+            <input type="hidden" name="patient_id" value="{{pid}}">
+            <input type="hidden" name="original_img" value="{{original_img}}">
+            <input type="hidden" name="enhanced_img" value="{{enhanced_img}}">
+            <input type="hidden" name="segmented_img" value="{{segmented_img}}">
+            <input type="hidden" name="overlay_img" value="{{overlay_img}}">
+            <input type="hidden" name="tumor_status" value="{{tumor_status}}">
+            <button type="submit" class="btn btn-success btn-analyze">
+                <i class="fa fa-file-pdf-o"></i> Generate Report
+            </button>
+        </form>
+
+        <a href="/breastcancer.html" class="btn btn-primary btn-analyze">
+            <i class="fa fa-arrow-left"></i> Analyze Another Image
+        </a>
+    </div>
 </div>
-    </div>
 
-    <!-- Image Modal -->
-    <div class="modal fade image-modal" id="imageModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                <div class="modal-body">
-                    <img id="fullSizeImage" src="" alt="Full size image" class="img-fluid">
-                </div>
-                <h5 class="modal-title mt-2" id="imageModalTitle"></h5>
+<!-- Image Modal -->
+<div class="modal fade image-modal" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-body">
+                <img id="fullSizeImage" src="" alt="Full size image" class="img-fluid">
             </div>
+            <h5 class="modal-title mt-2" id="imageModalTitle"></h5>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function showFullImage(imageSrc, title) {
-            document.getElementById('fullSizeImage').src = imageSrc;
-            document.getElementById('imageModalTitle').textContent = title;
-        }
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Function to show full image in modal
+    function showFullImage(imageSrc, title) {
+        const modalImage = document.getElementById('fullSizeImage');
+        const modalTitle = document.getElementById('imageModalTitle');
         
-        // Close modal when clicking outside the image
-        document.getElementById('imageModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                bootstrap.Modal.getInstance(this).hide();
+        // Set the image source and title
+        modalImage.src = imageSrc;
+        modalTitle.textContent = title;
+        
+        // Initialize the modal if not already done
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+        modal.show();
+    }
+
+    // Close modal when clicking outside the image
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            const modal = bootstrap.Modal.getInstance(this);
+            modal.hide();
+        }
+    });
+
+    // Form submission handler
+    document.getElementById('generate-report-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
+        
+        fetch('/generate_report', {
+            method: 'POST',
+            body: new FormData(form)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text) });
             }
+            return response.blob();
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `BreastCancerReport_${form.patient_id.value}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating report: ' + error.message);
+        })
+        .finally(() => {
+            // Restore button state
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
         });
-    </script>
+    });
+</script>
 </body>
 </html>
