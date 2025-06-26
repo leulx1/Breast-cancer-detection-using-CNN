@@ -36,6 +36,11 @@
   <link href="static/assets/css/main.css" rel="stylesheet">
 
   <style>
+      input[type=number]::-webkit-outer-spin-button,
+      input[type=number]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+                  }
     .results-container {
       padding: 40px;
       margin-top: 50px;
@@ -68,7 +73,7 @@
     }
     
     .results-table tr:hover {
-      background-color: #f1f1f1;
+      background-color: inherit;
     }
     
     .download-btn {
@@ -103,8 +108,48 @@
       font-size: 1.2rem;
       color: #6c757d;
     }
-  </style>
 
+    .search-container {
+      margin-bottom: 20px;
+      text-align: right;
+    }
+
+    #searchInput {
+      padding: 8px 15px;
+      border-radius: 20px;
+      border: 1px solid #ddd;
+      width: 300px;
+      margin-bottom: 15px;
+    }
+
+    .pagination {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .pagination button {
+      padding: 5px 10px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .pagination button.active {
+      background: #0062E6;
+      color: white;
+      border-color: #0062E6;
+    }
+    .results-table tbody tr:not([style*="display: none"]) {
+        background-color: black;
+    }
+    
+    .results-table tbody tr:not([style*="display: none"]):nth-child(even) {
+        background-color: #000;
+    }
+  </style>
 </head>
 
 <body>
@@ -112,11 +157,12 @@
 <header id="header" class="header d-flex align-items-center fixed-top">
   <div class="container-fluid d-flex align-items-center justify-content-between">
 
-    <a href="/" class="logo d-flex align-items-center  me-auto me-lg-0">
+    <a href="{{ url_for('auth.change_profile') }}" class="logo d-flex align-items-center  me-auto me-lg-0">
       <i class="fa fa-user-md"></i>
        {% if current_user.is_authenticated %}
       <h1>Welcome,Dr. {{ username }}!</h1>
     </a>
+
 
     <nav id="navbar" class="navbar">
       <ul>
@@ -137,76 +183,140 @@
   </div>
 </header><!-- End Header -->
 
-  <<main id="main">
-        <section class="container py-5">
-            <h2 class="text-center mb-4">Previous Detection Results</h2>
+<main id="main">
+    <section class="container py-5">
+        <h2 class="text-center mb-4">Previous Detection Results</h2>
+        
+        <div class="search-container">
+            <input type="number" id="searchInput" placeholder="Search by Patient ID...">
+        </div>
+
+        {% if detections %}
+        <div class="table-responsive">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Patient ID</th>
+                        <th>Report</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detection in detections %}
+                    <tr>
+                        <td>{{ detection.patient_id }}</td>
+                        <td>
+                            <a href="{{ url_for('download_pdf', filename=detection.pdf_location) }}" class="download-btn">
+                                <i class="bi bi-download"></i> Download
+                            </a>
+                        </td>
+                        <td class="{{ 'positive' if detection.tumor_status == 'Cancerous Tumor Found' else 'negative' }}">
+                            {{ detection.tumor_status }}
+                        </td>
+                        <td>{{ detection.created_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             
-            {% if detections %}
-            <div class="table-responsive">
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Patient Id</th>
-                            <th>Report</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for detection in detections %}
-                        <tr>
-                            <td>{{ detection.patient_id }}</td>
-                            <td>
-                                <a href="{{ url_for('download_pdf', filename=detection.pdf_location) }}" class="btn btn-link">
-                                  <i class="bi bi-download"></i> Download
-                                </a>
-                            </td>
-                            <td class="{{ 'positive' if detection.tumor_status == 'Positive' else 'negative' }}">
-                                {{ detection.tumor_status }}
-                            </td>
-                            <td>{{ detection.created_at }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="no-results">
-                <p>No previous detection results found.</p>
-                <a href="/breastcancer" class="btn btn-primary">Start New Detection</a>
-            </div>
-            {% endif %}
-        </section>
-    </main>
+            <div class="pagination" id="paginationControls"></div>
+        </div>
+        {% else %}
+        <div class="no-results">
+            <p>No previous detection results found.</p>
+            <a href="/breastcancer.html" class="btn btn-primary">Start New Detection</a>
+        </div>
+        {% endif %}
+    </section>
+</main>
 
-  <!-- End #main -->
-
-  <!-- Footer -->
-  <footer id="footer" class="footer">
-    <div class="container">
-      <div class="copyright">
-        &copy; Copyright <strong><span>Group 1</span></strong>. All Rights Reserved
-      </div>
-      <div class="credits">
-             Group 1
-      </div>
+<!-- Footer -->
+<footer id="footer" class="footer">
+  <div class="container">
+    <div class="copyright">
+      &copy; Copyright <strong><span>Group 1</span></strong>. All Rights Reserved
     </div>
-  </footer>
-  <!-- End Footer -->
+    <div class="credits">
+      Group 1
+    </div>
+  </div>
+</footer>
+<!-- End Footer -->
 
-  <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-  <div id="preloader"><div class="line"></div></div>
+<a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+<div id="preloader"><div class="line"></div></div>
 
-  <!-- Vendor JS Files -->
-  <script src="static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="static/assets/vendor/swiper/swiper-bundle.min.js"></script>
-  <script src="static/assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="static/assets/vendor/aos/aos.js"></script>
-  <script src="static/assets/vendor/php-email-form/validate.js"></script>
+<!-- Vendor JS Files -->
+<script src="static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+<script src="static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+<script src="static/assets/vendor/aos/aos.js"></script>
+<script src="static/assets/vendor/php-email-form/validate.js"></script>
 
-  <!-- Main JS File -->
-  <script src="static/assets/js/main.js"></script>
+<!-- Main JS File -->
+<script src="static/assets/js/main.js"></script>
+
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const filter = this.value.toUpperCase();
+        const table = document.querySelector('.results-table');
+        const tr = table.getElementsByTagName('tr');
+        
+        for (let i = 1; i < tr.length; i++) {
+            const td = tr[i].getElementsByTagName('td')[0];
+            if (td) {
+                const txtValue = td.textContent || td.innerText;
+                tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
+            }
+        }
+        currentPage = 1;
+        updatePagination();
+    });
+
+    // Pagination functionality
+    let currentPage = 1;
+    const rowsPerPage = 10;
+
+    function updatePagination() {
+        const table = document.querySelector('.results-table');
+        const rows = Array.from(table.querySelectorAll('tbody tr:not([style*="display: none"])'));
+        const pageCount = Math.ceil(rows.length / rowsPerPage);
+        const pagination = document.getElementById('paginationControls');
+        pagination.innerHTML = '';
+
+        for (let i = 1; i <= pageCount; i++) {
+            const button = document.createElement('button');
+            button.textContent = i;
+            button.className = currentPage === i ? 'active' : '';
+            button.addEventListener('click', () => {
+                currentPage = i;
+                showPage(currentPage);
+                updatePagination();
+            });
+            pagination.appendChild(button);
+        }
+
+        showPage(currentPage);
+    }
+
+    function showPage(page) {
+        const table = document.querySelector('.results-table');
+        const rows = Array.from(table.querySelectorAll('tbody tr:not([style*="display: none"])'));
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        rows.forEach((row, index) => {
+            row.style.display = (index >= start && index < end) ? '' : 'none';
+        });
+    }
+
+    // Initialize pagination
+    document.addEventListener('DOMContentLoaded', () => {
+        updatePagination();
+    });
+</script>
 
 </body>
-
 </html>
