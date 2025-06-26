@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Selale Unviersity Comprehensive Hospital Breast Cancer Detection</title>
+  <title>Selale University Comprehensive Hospital Breast Cancer Detection</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -70,27 +70,46 @@
       to { opacity: 0; }
     }
     .bi-eye-slash, .bi-eye {
-  fill: white !important; /* Bootstrap icons use fill instead of color */
-  filter: drop-shadow(0 0 1px #000); /* Adds shadow for better visibility */
-  background: rgba(0,0,0,0.2); /* Optional: adds subtle background */
-  padding: 2px;
-  border-radius: 3px;
-}
+      fill: white !important;
+      filter: drop-shadow(0 0 1px #000);
+      background: rgba(0,0,0,0.2);
+      padding: 2px;
+      border-radius: 3px;
+    }
+    .password-requirements {
+      font-size: 0.8rem;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+    .requirement {
+      display: flex;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+    .requirement i {
+      margin-right: 5px;
+    }
+    .valid {
+      color: #28a745;
+    }
+    .invalid {
+      color: #dc3545;
+    }
   </style>
 
 <body>
   <header id="header" class="header d-flex align-items-center fixed-top">
-  <div class="container-fluid d-flex align-items-center justify-content-between">
-    <a href="/" class="logo d-flex align-items-center me-auto me-lg-0">
-      <i class="fa fa-user-md"></i>
-      {% if current_user.is_authenticated %}
-        <h1>Welcome, Dr. {{ current_user.name }}!</h1>
-      {% endif %}
-    </a>
-    <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
-    <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
-  </div>
-</header>
+    <div class="container-fluid d-flex align-items-center justify-content-between">
+      <a href="/" class="logo d-flex align-items-center me-auto me-lg-0">
+        <i class="fa fa-user-md"></i>
+        {% if current_user.is_authenticated %}
+          <h1>Welcome, Dr. {{ current_user.name }}!</h1>
+        {% endif %}
+      </a>
+      <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
+      <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
+    </div>
+  </header>
 
   <!-- Flash messages -->
   <div class="flash-messages">
@@ -122,15 +141,39 @@
 
       <div class="form-group mb-3 password-container">
         <label for="new_password">New Password</label>
-        <input type="password" name="new_password" id="new_password" class="form-control" required minlength="8"
-          pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()]).{8,}"
-          title="Must contain at least one number, one uppercase, one lowercase, one special character, and at least 8 characters">
+        <input type="password" name="new_password" id="new_password" class="form-control" required 
+               pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()]).{8,}$"
+               title="Must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character"
+               oninput="checkPasswordRequirements(this.value)">
         <i class="bi bi-eye-slash password-toggle" onclick="togglePassword('new_password', this)"></i>
+        
+        <div class="password-requirements mt-2">
+          <div class="requirement" id="length-req">
+            <i class="bi" id="length-icon"></i>
+            <span>At least 8 characters</span>
+          </div>
+          <div class="requirement" id="uppercase-req">
+            <i class="bi" id="uppercase-icon"></i>
+            <span>At least 1 uppercase letter</span>
+          </div>
+          <div class="requirement" id="lowercase-req">
+            <i class="bi" id="lowercase-icon"></i>
+            <span>At least 1 lowercase letter</span>
+          </div>
+          <div class="requirement" id="number-req">
+            <i class="bi" id="number-icon"></i>
+            <span>At least 1 number</span>
+          </div>
+          <div class="requirement" id="special-req">
+            <i class="bi" id="special-icon"></i>
+            <span>At least 1 special character (!@#$%^&*)</span>
+          </div>
+        </div>
       </div>
 
       <div class="form-group mb-3 password-container">
         <label for="confirm_new_password">Confirm New Password</label>
-        <input type="password" name="confirm_new_password" id="confirm_new_password" class="form-control" required minlength="8">
+        <input type="password" name="confirm_new_password" id="confirm_new_password" class="form-control" required>
         <i class="bi bi-eye-slash password-toggle" onclick="togglePassword('confirm_new_password', this)"></i>
         <small class="text-danger" id="matchError" style="display:none;">Passwords do not match.</small>
       </div>
@@ -152,8 +195,70 @@
         return false;
       }
 
+      // Check password meets all requirements
+      const hasMinLength = newPassword.length >= 8;
+      const hasUpperCase = /[A-Z]/.test(newPassword);
+      const hasLowerCase = /[a-z]/.test(newPassword);
+      const hasNumber = /\d/.test(newPassword);
+      const hasSpecialChar = /[!@#$%^&*()]/.test(newPassword);
+
+      if (!hasMinLength || !hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+        alert("Password must meet all requirements");
+        return false;
+      }
+
       error.style.display = "none";
       return true;
+    }
+
+    function checkPasswordRequirements(password) {
+      // Check length requirement
+      const lengthReq = document.getElementById("length-req");
+      const lengthIcon = document.getElementById("length-icon");
+      const hasMinLength = password.length >= 8;
+      updateRequirement(lengthReq, lengthIcon, hasMinLength);
+
+      // Check uppercase requirement
+      const uppercaseReq = document.getElementById("uppercase-req");
+      const uppercaseIcon = document.getElementById("uppercase-icon");
+      const hasUpperCase = /[A-Z]/.test(password);
+      updateRequirement(uppercaseReq, uppercaseIcon, hasUpperCase);
+
+      // Check lowercase requirement
+      const lowercaseReq = document.getElementById("lowercase-req");
+      const lowercaseIcon = document.getElementById("lowercase-icon");
+      const hasLowerCase = /[a-z]/.test(password);
+      updateRequirement(lowercaseReq, lowercaseIcon, hasLowerCase);
+
+      // Check number requirement
+      const numberReq = document.getElementById("number-req");
+      const numberIcon = document.getElementById("number-icon");
+      const hasNumber = /\d/.test(password);
+      updateRequirement(numberReq, numberIcon, hasNumber);
+
+      // Check special character requirement
+      const specialReq = document.getElementById("special-req");
+      const specialIcon = document.getElementById("special-icon");
+      const hasSpecialChar = /[!@#$%^&*()]/.test(password);
+      updateRequirement(specialReq, specialIcon, hasSpecialChar);
+    }
+
+    function updateRequirement(element, icon, isValid) {
+      if (isValid) {
+        element.classList.add("valid");
+        element.classList.remove("invalid");
+        icon.classList.remove("bi-x-circle");
+        icon.classList.add("bi-check-circle");
+        icon.classList.add("text-success");
+        icon.classList.remove("text-danger");
+      } else {
+        element.classList.add("invalid");
+        element.classList.remove("valid");
+        icon.classList.remove("bi-check-circle");
+        icon.classList.add("bi-x-circle");
+        icon.classList.add("text-danger");
+        icon.classList.remove("text-success");
+      }
     }
 
     function togglePassword(fieldId, icon) {
@@ -169,8 +274,26 @@
       }
     }
 
-    // Auto-close flash messages after 5 seconds
+    // Initialize password requirements display
     document.addEventListener('DOMContentLoaded', () => {
+      // Initialize all requirements as invalid
+      const requirements = [
+        { id: "length-req", icon: "length-icon" },
+        { id: "uppercase-req", icon: "uppercase-icon" },
+        { id: "lowercase-req", icon: "lowercase-icon" },
+        { id: "number-req", icon: "number-icon" },
+        { id: "special-req", icon: "special-icon" }
+      ];
+
+      requirements.forEach(req => {
+        const element = document.getElementById(req.id);
+        const icon = document.getElementById(req.icon);
+        element.classList.add("invalid");
+        icon.classList.add("bi-x-circle");
+        icon.classList.add("text-danger");
+      });
+
+      // Auto-close flash messages after 5 seconds
       const alerts = document.querySelectorAll('.flash-message');
       alerts.forEach(alert => {
         setTimeout(() => {
@@ -190,5 +313,4 @@
   <!-- Template Main JS File -->
   <script src="static/assets/js/main.js"></script>
 </body>
-
 </html>
