@@ -4,8 +4,10 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>DiagnoSys-Deep Learning Solution</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Selale Unviersity Comprehensive Hospital Breast Cancer Detection</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -31,28 +33,73 @@
   <link href="static/assets/css/main.css" rel="stylesheet">
 
 </head>
+<style>
+    /* Flash messages styling */
+    .flash-messages {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      z-index: 9999;
+      width: 350px;
+    }
+    
+    .flash-message {
+      animation: fadeIn 0.5s, fadeOut 0.5s 4.5s;
+      animation-fill-mode: forwards;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-20px); }
+    }
+  </style>
+</head>
 
+<body>
+  <!-- Flash messages container -->
+  <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          {% if 'change_' in category %}
+            {% set bootstrap_category = category.replace('change_', '') %}
+          {% else %}
+            {% set bootstrap_category = category %}
+          {% endif %}
+          <div class="alert alert-{{ bootstrap_category }} flash-message alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
 <body>
 
   <!-- ======= Header ======= -->
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid d-flex align-items-center justify-content-between">
 
-      <a href="/" class="logo d-flex align-items-center  me-auto me-lg-0">
+      <a href="{{ url_for('auth.change_profile') }}"class="logo d-flex align-items-center  me-auto me-lg-0">
 
         <i class="fa fa-user-md"></i>
-        <h1>DiagnoSys</h1>
+        {% if current_user.is_authenticated %}
+        <h1>Welcome,Dr. {{ username }}!</h1>
       </a>
 
       <nav id="navbar" class="navbar">
         <ul>
           <li><a href="/" class="active">Home</a></li>
-          <li><a href="about.html">About</a></li>
           <li><a href="services.html">Services</a></li>
+          <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
-          <!-- <li><a href="login.html">Login</a></li> -->
-          {% if username %}  
-          <li>Welcome, {{ username }}!</li>  
           <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>  
       {% else %}  
           <li><a href="{{ url_for('auth.login') }}">Login</a></li>  
@@ -73,28 +120,28 @@
         <div class="col-lg-6 text-center">
           <!--<h2>I'm <span>Jenny Wilson</span> a Professional Photographer from New York City</h2>-->
           <h2>
-            Welcome to DiagnoSys!<br>Upload an image and get the results.
+            Welcome to Salale Comprehensive Hospital Breast Cancer Detection system!<br>Upload an image and get the results.
           </h2>
-          <a href="services.html" class="btn-get-started">Try HealthCure</a>
+          <a href="services.html" class="btn-get-started">Go To Services</a>
         </div>
       </div>
     </div>
   </section><!-- End Hero Section -->
 
-
-  </main><!-- End #main -->
-
-  <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
     <div class="container">
       <div class="copyright">
-        &copy; Copyright <strong><span>Team DiagnoSys</span></strong>. All Rights Reserved
+        &copy; Made By <strong><span>Group 1</span></strong>. All Rights Reserved
       </div>
-      <div class="credits">
-              Designed by Team DiagnoSys
-      </div>
+      <!-- <div class="credits">
+             Group 1
+      </div> -->
     </div>
   </footer><!-- End Footer -->
+  
+
+  </main><!-- End #main -->
+
 
   <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
