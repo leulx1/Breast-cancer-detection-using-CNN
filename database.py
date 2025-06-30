@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extras import RealDictCursor  # ✅ Import RealDictCursor
 from config import DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT
 
 def get_db_connection():
