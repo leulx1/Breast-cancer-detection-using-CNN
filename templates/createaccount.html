@@ -1,11 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Create Account</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminstyle.css') }}">
     <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .password-container {
+            position: relative;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 35px;
+            cursor: pointer;
+            color: #777;
+        }
+        .generate-password {
+            position: absolute;
+            right: 35px;
+            top: 35px;
+            cursor: pointer;
+            color: #777;
+        }
+        .password-mismatch {
+            color: red;
+            font-size: 12px;
+            display: none;
+        }
+        #success-message {
+            display: none;
+            color: green;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e6ffe6;
+            border: 1px solid #4CAF50;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            position: relative;
+        }
+        #success-message::before {
+            content: "\2713";
+            margin-right: 10px;
+        }
+    </style>
 </head>
 <body>
     <input type="checkbox" id="checkbox">
@@ -16,7 +60,6 @@
             </label>
         </h2>
         <span class="notification" id="notificationBtn">
-            <i class="fa fa-bell" aria-hidden="true"></i>
             <span id="notificationNum"></span>
         </span>
     </header>
@@ -25,7 +68,42 @@
     </div>
 
     <div class="body">
-        {% include 'navbar.html' %}
+    <nav class="side-bar">
+    <div class="user-p">
+        <img src="{{ url_for('static', filename='assets/img/icons/user.png') }}" alt="User">
+        <h4>
+            {% if current_user.is_authenticated %}
+                {{ username }}
+            {% endif %}
+        </h4>
+    </div>
+    <ul id="navList">
+        <li>
+            <a href="{{ url_for('admin.index') }}">
+                <i class="fa fa-tachometer" aria-hidden="true"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('auth.register') }}">
+                <i class="fa fa-user" aria-hidden="true"></i>
+                <span>Create User</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('auth.manage_accounts') }}">
+                <i class="fa fa-users" aria-hidden="true"></i>
+                <span>Manage Users</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('auth.logout') }}">
+                <i class="fa fa-sign-out" aria-hidden="true"></i>
+                <span>Logout</span>
+            </a>
+        </li>
+    </ul>
+</nav>
 
         <section class="section-1">
             <div class="form-container">
@@ -33,37 +111,93 @@
                 <div id="success-message" style="display: none; color: green;">Account created successfully!</div>
                 <form id="createAccountForm" method="POST" action="{{ url_for('auth.register') }}">
                     <label for="name">Name</label>
-                    <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                    <input type="text" id="name" name="name" placeholder="Enter a name" required>
                     
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    <input type="email" id="email" name="email" placeholder="Enter an email" required>
                     <span id="email-error" style="color: red; display: none;">Email already exists.</span>
                     
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="Enter a strong password" required>
+                    <div class="password-container">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Enter a strong password" required>
+                        <i class="fa fa-key generate-password" onclick="generatePassword()"></i>
+                        <i class="fa fa-eye toggle-password" onclick="togglePassword('password')"></i>
+                    </div>
+                    
+                    <div class="password-container">
+                        <label for="confirm_password">Confirm Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+                        <i class="fa fa-eye toggle-password" onclick="togglePassword('confirm_password')"></i>
+                    </div>
+                    <span id="password-mismatch" class="password-mismatch">Passwords do not match!</span>
                     
                     <label for="role">Role</label>
                     <select id="role" name="role">
                         <option value="radiologist" selected>Radiologist</option>
-                        <option value="admin">Admin</option>
+                        <option value="admin">Admininstrator</option>
                     </select>
                     
                     <button type="submit">Create Account</button>
                 </form>
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-             {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">
-        {{ message }}
-      </div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+{% if messages %}
+    {% for category, message in messages %}
+        {% if category != 'success' %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
             </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% endwith %}
         </section>
     </div>
 
     <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = field.nextElementSibling;
+            
+            if (field.type === "password") {
+                field.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                field.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generatePassword() {
+            const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+            const numbers = '0123456789';
+            const special = '@$!%*?&';
+            const allChars = uppercase + lowercase + numbers + special;
+
+            let password = '';
+            password += uppercase[Math.floor(Math.random() * uppercase.length)];
+            password += numbers[Math.floor(Math.random() * numbers.length)];
+            password += special[Math.floor(Math.random() * special.length)];
+
+            for (let i = 0; i < 5; i++) {
+                password += allChars[Math.floor(Math.random() * allChars.length)];
+            }
+
+            password = shuffle(password.split('')).join('');
+
+            document.getElementById('password').value = password;
+        }
+
         $(document).ready(function () {
             $("#email").on("input", function () {
                 let email = $(this).val();
@@ -83,64 +217,78 @@
                 }
             });
 
-            $("#createAccountForm").on("submit", function (event) {
-    event.preventDefault(); // Prevent default form submission
-    let valid = true;
-
-    let name = $("#name").val();
-    let nameRegex = /^[A-Za-z\s]+$/;
-    if (!nameRegex.test(name)) {
-        alert("Name must contain only letters.");
-        valid = false;
-    }
-
-    let email = $("#email").val().toLowerCase();
-    let emailRegex = /^[a-z][a-z0-9_.]+@[a-z]+\.[a-z]{2,}$/;
-    if (!emailRegex.test(email)) {
-        alert("Enter a valid email (must start with a letter).");
-        valid = false;
-    }
-
-    let password = $("#password").val();
-    let passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(password)) {
-        alert("Password must be at least 8 characters, include 1 uppercase, 1 number, and 1 special character.");
-        valid = false;
-    }
-
-    if ($("#email-error").is(":visible")) {
-        alert("Email is already registered.");
-        valid = false;
-    }
-
-    if (valid) {
-        $.ajax({
-            url: "{{ url_for('auth.register') }}",
-            type: "POST",
-            data: $("#createAccountForm").serialize(),
-            dataType: "json",
-            success: function (response) {
-                if (response.success) {
-                    $("#success-message").text(response.message).show();
-                    $("#createAccountForm")[0].reset();
+            $("#confirm_password").on("input", function() {
+                const password = $("#password").val();
+                const confirmPassword = $(this).val();
+                
+                if (password !== confirmPassword) {
+                    $("#password-mismatch").show();
                 } else {
-                    alert(response.message);
+                    $("#password-mismatch").hide();
                 }
-            },
-            error: function (xhr) {
-                let errorMsg = "An error occurred. Please try again.";
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMsg = xhr.responseJSON.message;
-                }
-                alert(errorMsg);
-            }
-        });
-    }
-});
+            });
 
+            $("#createAccountForm").on("submit", function (event) {
+                event.preventDefault();
+                let valid = true;
+
+                let name = $("#name").val();
+                let nameRegex = /^[A-Za-z\s]+$/;
+                if (!nameRegex.test(name)) {
+                    alert("Name must contain only letters.");
+                    valid = false;
+                }
+
+                let email = $("#email").val().toLowerCase();
+                let emailRegex = /^[a-z][a-z0-9_.]+@[a-z]+\.[a-z]{2,}$/;
+                if (!emailRegex.test(email)) {
+                    alert("Enter a valid email The format is wrong!!!.");
+                    valid = false;
+                }
+
+                let password = $("#password").val();
+                let confirmPassword = $("#confirm_password").val();
+                if (password !== confirmPassword) {
+                    $("#password-mismatch").show();
+                    valid = false;
+                }
+
+                let passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+                if (!passwordRegex.test(password)) {
+                    alert("Password must be at least 8 characters, include 1 uppercase, 1 number, and 1 special character.");
+                    valid = false;
+                }
+
+                if ($("#email-error").is(":visible")) {
+                    alert("Email is already registered.");
+                    valid = false;
+                }
+
+                if (valid) {
+                    $.ajax({
+                        url: "{{ url_for('auth.register') }}",
+                        type: "POST",
+                        data: $("#createAccountForm").serialize(),
+                        dataType: "json",
+                        success: function (response) {
+                            if (response.success) {
+                                $("#success-message").text(response.message).show();
+                                $("#createAccountForm")[0].reset();
+                            } else {
+                                alert(response.message);
+                            }
+                        },
+                        error: function (xhr) {
+                            let errorMsg = "An error occurred. Please try again.";
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                            alert(errorMsg);
+                        }
+                    });
+                }
+            });
         });
     </script>
 </body>
 </html>
-
-
