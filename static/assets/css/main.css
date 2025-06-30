@@ -349,6 +349,14 @@ h6 {
 # Desktop Navigation
 --------------------------------------------------------------*/
 @media (min-width: 1280px) {
+
+
+/* Optional: Add this if you want the box to appear around the entire li */
+
+.navbar li:hover {
+    background-color: #28a745; /* Same green color */
+    border-radius: 4px;
+}
   .navbar {
     padding: 0;
   }
@@ -388,12 +396,17 @@ h6 {
     margin-left: 5px;
   }
 
-  .navbar a:hover,
-  .navbar .active,
-  .navbar .active:focus,
-  .navbar li:hover>a {
+.navbar a:hover,
+.navbar .active,
+.navbar .active:focus,
+.navbar li:hover>a {
     color: #fff;
-  }
+    background-color: #28a745; /* Green background color */
+    padding: 10px 15px; /* Adjust padding to create box effect */
+    border-radius: 4px; /* Optional: rounded corners */
+    transition: all 0.3s ease; /* Smooth transition for all properties */
+    margin:5px;
+}
 
   .navbar .dropdown ul {
     display: block;
